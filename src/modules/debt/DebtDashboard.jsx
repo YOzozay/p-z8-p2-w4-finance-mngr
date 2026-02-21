@@ -1,0 +1,618 @@
+import { useEffect, useMemo, useState } from "react";
+import { API_URL } from "../../config/api";
+import "./debt.css";
+
+// ---------- helpers ----------
+function currency(n) {
+  const num = Number(n || 0);
+  return "฿" + num.toLocaleString("th-TH");
+}
+function showDate(d) {
+  return d || "";
+}
+function ym(d) {
+  if (!d) return "";
+  return d.slice(0, 7);
+}
+function todayISO() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function lastNMonths(n = 6) {
+  const res = [];
+  const now = new Date();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    res.push(`${y}-${m}`);
+  }
+  return res;
+}
+
+// ---------- component ----------
+export default function DebtDashboard() {
+  const [tab, setTab] = useState("add"); // add | cards
+  const [cards, setCards] = useState([]);
+  const [debts, setDebts] = useState([]);
+
+  // ----- card form -----
+  const [cardName, setCardName] = useState("");
+  const [cutOffDay, setCutOffDay] = useState("");
+
+  // ----- add item form -----
+  const [date, setDate] = useState(todayISO());
+  const [sourceType, setSourceType] = useState("bill"); // bill | credit
+  const [selectedCardId, setSelectedCardId] = useState("");
+  const [itemName, setItemName] = useState("");
+  const [isInstallment, setIsInstallment] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [perMonth, setPerMonth] = useState("");
+  const [months, setMonths] = useState("");
+
+  // ----- expand installment -----
+  const [openPlanId, setOpenPlanId] = useState(null);
+
+  // ----- filters -----
+  const months6 = useMemo(() => lastNMonths(6), []);
+  const [filterMonth, setFilterMonth] = useState(ym(todayISO()));
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  // ---- load ----
+  async function loadCards() {
+    const res = await fetch(`${API_URL}?mode=cards`);
+    const data = await res.json();
+    setCards(Array.isArray(data) ? data : []);
+  }
+
+  async function loadDebts() {
+    const res = await fetch(`${API_URL}?mode=debt`);
+    const data = await res.json();
+    setDebts(Array.isArray(data) ? data : []);
+  }
+
+  useEffect(() => {
+    loadCards();
+    loadDebts();
+  }, []);
+
+  // ---- actions: cards ----
+  async function addCard() {
+    if (!cardName.trim()) return alert("กรอกชื่อบัตร");
+    const d = Number(cutOffDay);
+    if (!d || d < 1 || d > 31) return alert("วันตัดรอบต้องอยู่ระหว่าง 1-31");
+
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        type: "add_card",
+        name: cardName.trim(),
+        cutOffDay: d,
+      }),
+    });
+
+    setCardName("");
+    setCutOffDay("");
+    await loadCards();
+  }
+
+  async function deleteCard(cardId) {
+    if (!window.confirm("ลบบัตรนี้?")) return;
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        type: "delete_card",
+        cardId,
+      }),
+    });
+    await loadCards();
+  }
+
+  // ---- actions: delete item ----
+  async function deleteDebt(id) {
+    if (!window.confirm("ลบรายการนี้?")) return;
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        type: "delete_debt",
+        id,
+      }),
+    });
+    await loadDebts();
+  }
+
+  // ---- actions: toggle paid ----
+  async function togglePaid(id) {
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        type: "toggle_debt_paid",
+        id,
+      }),
+    });
+    await loadDebts();
+  }
+
+  // ---- bulk: pay all this month ----
+  async function payAllThisMonth() {
+    if (!window.confirm("ต้องการจ่ายทุกรายการของเดือนนี้หรือไม่? (ไม่รวมผ่อน)")) return;
+
+    const targets = debts.filter(
+      (r) => r[2] !== "installment" && ym(r[1]) === filterMonth && r[6] !== "yes"
+    );
+
+    for (const r of targets) {
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          type: "toggle_debt_paid",
+          id: r[0],
+        }),
+      });
+    }
+    await loadDebts();
+  }
+
+  // ---- actions: add item ----
+  async function addItem() {
+    if (!itemName.trim()) return alert("กรอกชื่อรายการ");
+
+    if (!isInstallment) {
+      if (!amount || Number(amount) <= 0) return alert("กรอกจำนวนเงิน");
+
+      if (sourceType === "bill") {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            type: "add_debt",
+            date,
+            debtType: "bill",
+            name: itemName.trim(),
+            category: "",
+            amount: Number(amount),
+            paid: false,
+            note: "",
+          }),
+        });
+      } else {
+        if (!selectedCardId) return alert("เลือกบัตรเครดิต");
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            type: "add_credit_txn",
+            usedDate: date,
+            cardId: selectedCardId,
+            name: itemName.trim(),
+            category: "",
+            amount: Number(amount),
+          }),
+        });
+      }
+    } else {
+      if (!perMonth || Number(perMonth) <= 0) return alert("กรอกยอดต่อเดือน");
+      if (!months || Number(months) <= 0) return alert("กรอกจำนวนเดือน");
+
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          type: "add_installment_plan",
+          startDate: date,
+          name: itemName.trim(),
+          category: "",
+          perMonth: Number(perMonth),
+          months: Number(months),
+        }),
+      });
+    }
+
+    setItemName("");
+    setAmount("");
+    setPerMonth("");
+    setMonths("");
+    setSelectedCardId("");
+    await loadDebts();
+  }
+
+  // ---- computed: installment groups ----
+  const installmentPlans = useMemo(() => {
+    const map = {};
+    debts.forEach((r) => {
+      const type = r[2];
+      const planId = r[8];
+      if (type === "installment" && planId) {
+        if (!map[planId]) map[planId] = [];
+        map[planId].push(r);
+      }
+    });
+    return Object.values(map);
+  }, [debts]);
+
+  const installmentTotalPreview = useMemo(() => {
+    const pm = Number(perMonth || 0);
+    const mo = Number(months || 0);
+    return pm * mo;
+  }, [perMonth, months]);
+
+  // ---- summary ----
+  const currentYM = filterMonth;
+  const monthRows = useMemo(
+    () => debts.filter((r) => r[2] !== "installment" && ym(r[1]) === currentYM),
+    [debts, currentYM]
+  );
+
+  const monthTotal = useMemo(
+    () => monthRows.reduce((s, r) => s + Number(r[5] || 0), 0),
+    [monthRows]
+  );
+  const monthPaid = useMemo(
+    () => monthRows.filter((r) => r[6] === "yes").reduce((s, r) => s + Number(r[5] || 0), 0),
+    [monthRows]
+  );
+  const monthUnpaid = useMemo(() => monthTotal - monthPaid, [monthTotal, monthPaid]);
+  const monthPercent = monthTotal > 0 ? Math.round((monthPaid / monthTotal) * 100) : 0;
+
+  // ---- chart ----
+  const chartData = useMemo(() => {
+    const map = {};
+    months6.forEach((m) => (map[m] = 0));
+    debts.forEach((r) => {
+      if (r[2] === "installment") return;
+      const k = ym(r[1]);
+      if (map[k] != null) map[k] += Number(r[5] || 0);
+    });
+    return months6.map((m) => ({ m, v: map[m] || 0 }));
+  }, [debts, months6]);
+
+  const maxChart = Math.max(1, ...chartData.map((d) => d.v));
+
+  // ---- filters ----
+  const filteredRows = useMemo(() => {
+    return debts
+      .filter((r) => r[2] !== "installment")
+      .filter((r) => (filterMonth ? ym(r[1]) === filterMonth : true))
+      .filter((r) => {
+        if (filterStatus === "paid") return r[6] === "yes";
+        if (filterStatus === "unpaid") return r[6] !== "yes";
+        return true;
+      });
+  }, [debts, filterMonth, filterStatus]);
+
+  // ---- actions: installment ----
+  async function deletePlan(plan) {
+    if (!window.confirm("ลบทั้งแผนผ่อนนี้? (จะลบทุกงวด)")) return;
+    for (const r of plan) {
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          type: "delete_debt",
+          id: r[0],
+        }),
+      });
+    }
+    setOpenPlanId(null);
+    await loadDebts();
+  }
+
+  async function payCurrentInstallment(plan) {
+    const sorted = plan.slice().sort((a, b) => Number(a[9]) - Number(b[9]));
+    const target = sorted.find((r) => r[6] !== "yes");
+    if (!target) return alert("แผนนี้จ่ายครบแล้ว");
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        type: "toggle_debt_paid",
+        id: target[0],
+      }),
+    });
+    await loadDebts();
+  }
+
+  // ---------- UI ----------
+  return (
+    <div className="debt-page">
+      <h2 className="page-title">หนี้ & บิล</h2>
+
+      {/* Summary */}
+      <div className="card-box">
+        <h3>สรุปเดือน {currentYM}</h3>
+        <div className="summary-grid">
+          <div className="sum-card">
+            <div className="label">ต้องจ่าย</div>
+            <div className="value">{currency(monthTotal)}</div>
+          </div>
+          <div className="sum-card ok">
+            <div className="label">จ่ายแล้ว</div>
+            <div className="value">{currency(monthPaid)}</div>
+          </div>
+          <div className="sum-card wait">
+            <div className="label">ค้างจ่าย</div>
+            <div className="value">{currency(monthUnpaid)}</div>
+          </div>
+        </div>
+        <div className="progress-wrap">
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: `${monthPercent}%` }} />
+          </div>
+          <div className="muted">{monthPercent}%</div>
+        </div>
+        <button className="btn primary" onClick={payAllThisMonth}>
+          💸 จ่ายทั้งหมดของเดือนนี้
+        </button>
+      </div>
+
+      {/* Chart */}
+      <div className="card-box">
+        <h3>กราฟยอดต้องจ่ายย้อนหลัง 6 เดือน</h3>
+        <div className="chart">
+          {chartData.map((d) => (
+            <div key={d.m} className="bar-col">
+              <div className="bar" style={{ height: `${(d.v / maxChart) * 100}%` }} />
+              <div className="bar-label">{d.m}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="tab-row">
+        <button className={tab === "add" ? "tab active" : "tab"} onClick={() => setTab("add")}>
+          เพิ่มรายการ
+        </button>
+        <button className={tab === "cards" ? "tab active" : "tab"} onClick={() => setTab("cards")}>
+          จัดการบัตรเครดิต
+        </button>
+      </div>
+
+      {/* Cards */}
+      {tab === "cards" && (
+        <div className="card-box">
+          <h3>จัดการบัตรเครดิต</h3>
+          <div className="form-row">
+            <input placeholder="ชื่อบัตร" value={cardName} onChange={(e) => setCardName(e.target.value)} />
+            <input
+              placeholder="วันตัดรอบ (1-31)"
+              type="number"
+              min="1"
+              max="31"
+              value={cutOffDay}
+              onChange={(e) => setCutOffDay(e.target.value)}
+            />
+            <button className="btn-add" onClick={addCard}>
+              + เพิ่มบัตร
+            </button>
+          </div>
+          <div className="card-list">
+            {cards.length === 0 && <div className="empty">ยังไม่มีบัตร</div>}
+            {cards.map((c) => (
+              <div className="card-row" key={c.cardId}>
+                <div>
+                  <b>{c.name}</b> (ตัดรอบ {c.cutOffDay})
+                </div>
+                <button className="btn-delete" onClick={() => deleteCard(c.cardId)}>
+                  ลบ
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* --------- TAB: ADD --------- */}
+      {tab === "add" && (
+        <>
+          <div className="card-box">
+            <h3>เพิ่มรายการ</h3>
+
+            <div className="form-grid">
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+
+              <select value={sourceType} onChange={(e) => setSourceType(e.target.value)}>
+                <option value="bill">บิล / เงินสด</option>
+                <option value="credit">บัตรเครดิต</option>
+              </select>
+
+              {sourceType === "credit" && (
+                <select value={selectedCardId} onChange={(e) => setSelectedCardId(e.target.value)}>
+                  <option value="">-- เลือกบัตร --</option>
+                  {cards.map((c) => (
+                    <option key={c.cardId} value={c.cardId}>
+                      {c.name} (ตัดรอบ {c.cutOffDay})
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              <input
+                placeholder="ชื่อรายการ (เช่น ค่าไฟ / ประกัน)"
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+              />
+
+              <select value={isInstallment ? "yes" : "no"} onChange={(e) => setIsInstallment(e.target.value === "yes")}>
+                <option value="no">ไม่ผ่อน</option>
+                <option value="yes">ผ่อน</option>
+              </select>
+
+              {!isInstallment && (
+                <input type="number" placeholder="จำนวนเงิน" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              )}
+
+              {isInstallment && (
+                <>
+                  <input
+                    type="number"
+                    placeholder="ยอดต่อเดือน"
+                    value={perMonth}
+                    onChange={(e) => setPerMonth(e.target.value)}
+                  />
+                  <input
+                    type="number"
+                    placeholder="จำนวนเดือน"
+                    value={months}
+                    onChange={(e) => setMonths(e.target.value)}
+                  />
+                  <div className="muted">
+                    ยอดรวม: <b>{currency(installmentTotalPreview)}</b>
+                  </div>
+                </>
+              )}
+
+              <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+                  <button className="btn-add" onClick={addItem} style={{ width: '400xp' }}> 
+                    + เพิ่มรายการ
+                  </button>
+                </div>
+            </div>
+          </div>
+        
+
+          <div className="card-container">
+            {/* --------- INSTALLMENTS (slide animation) --------- */}
+            {installmentPlans.length > 0 && (
+              <div className="card-box-1">
+                <h3>รายการผ่อน</h3>
+                <div className="installment-grid">
+                  {installmentPlans.map((plan, idx) => {
+                    const planId = plan[0][8];
+                    const total = plan.length;
+                    const paid = plan.filter((r) => r[6] === "yes").length;
+                    const percent = Math.round((paid / total) * 100);
+                    const name = plan[0][3];
+                    const per = Number(plan[0][5]);
+                    const sum = per * total;
+                    const isOpen = openPlanId === planId;
+
+                    return (
+                      <div key={idx} className="install-wrap">
+                        <div className="install-card clickable" onClick={() => setOpenPlanId(isOpen ? null : planId)}>
+                          <div className="title">
+                            {name} <span className="chev">{isOpen ? "▾" : "▸"}</span>
+                          </div>
+                          <div className="muted">
+                            {paid}/{total} งวด
+                          </div>
+                          <div className="bar">
+                            <div className="bar-fill" style={{ width: `${percent}%` }} />
+                          </div>
+                          <div className="row">
+                            <span>{percent}%</span>
+                            <span>{currency(per)} / เดือน</span>
+                          </div>
+                          <div className="muted">รวม {currency(sum)}</div>
+                          <div className="row actions">
+                            <button
+                              className="btn primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                payCurrentInstallment(plan);
+                              }}
+                            >
+                              จ่ายงวดนี้
+                            </button>
+                            <button
+                              className="btn danger"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deletePlan(plan);
+                              }}
+                            >
+                              ลบทั้งแผน
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* SLIDE PANEL */}
+                        <div className={`slide-panel ${isOpen ? "open" : ""}`}>
+                          <div className="slide-inner">
+                            {plan
+                              .slice()
+                              .sort((a, b) => Number(a[9]) - Number(b[9]))
+                              .map((r, i) => (
+                                <div className="install-row" key={i}>
+                                  <div>
+                                    งวด {r[9]} / {r[10]}
+                                  </div>
+                                  <div>{showDate(r[1])}</div>
+                                  <div>{currency(r[5])}</div>
+                                  <div>
+                                    {r[6] === "yes" ? (
+                                      <span className="badge ok">จ่ายแล้ว</span>
+                                    ) : (
+                                      <span className="badge wait">ค้างจ่าย</span>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <button className="btn-delete" onClick={() => deleteDebt(r[0])}>
+                                      ลบ
+                                    </button>
+                                    <button className="btn" onClick={() => togglePaid(r[0])}>
+                                      สลับสถานะ
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* --------- ALL LIST (exclude installment) --------- */}
+            <div className="card-box-2">
+              <h3>รายการทั้งหมด</h3>
+
+              {/* Filters */}
+              <div className="filter-row">
+                <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)}>
+                  {months6.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                  <option value="all">ทั้งหมด</option>
+                  <option value="paid">จ่ายแล้ว</option>
+                  <option value="unpaid">ค้างจ่าย</option>
+                </select>
+              </div>
+
+              <div className="table">
+                <div className="thead">
+                  <div>วันที่</div>
+                  <div>รายการ</div>
+                  <div>จำนวนเงิน</div>
+                  <div>สถานะ</div>
+                </div>
+
+                {filteredRows.map((r, i) => (
+                  <div className="trow" key={i}>
+                    <div>{showDate(r[1])}</div>
+                    <div>{r[3]}</div>
+                    <div>{currency(r[5])}</div>
+                    <div className="action-group">
+                        <div className="status-badge">
+                          {r[6] === "yes" ? <span className="badge ok">จ่ายแล้ว</span> : <span className="badge wait">ค้างจ่าย</span>}
+                        </div>
+                        <div className="button-group">
+                          <button className="btn-delete" onClick={() => deleteDebt(r[0])}>ลบ</button>
+                          <button className="btn" onClick={() => togglePaid(r[0])}>สลับสถานะ</button>
+                        </div>
+                    </div>
+                  </div>
+                ))}
+
+                {filteredRows.length === 0 && <div className="empty">ไม่พบรายการตามตัวกรอง</div>}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
