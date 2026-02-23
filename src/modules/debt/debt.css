@@ -32,16 +32,15 @@
   gap: var(--space-5);
   width: 100%;
   align-items: flex-start;
-  justify-content: flex-start; /* เปลี่ยนจาก space-around */
+  justify-content: flex-start;
 }
-/* เป็น */
 .card-box-1 {
-  flex: 0 0 520px;   /* กว้างคงที่ ไม่ขยาย */
+  flex: 0 0 520px;
   max-width: 520px;
 }
 .card-box-2 {
-  flex: 1;           /* กินพื้นที่ที่เหลือทั้งหมด */
-  min-width: 0;      /* ป้องกัน overflow */
+  flex: 1;
+  min-width: 0;
 }
 
 /* ── Summary Grid (3 stats) ── */
@@ -160,6 +159,7 @@
   font-size: 0.85rem;
   cursor: pointer;
   transition: all var(--ease);
+  white-space: nowrap;
 }
 .btn-add:hover { opacity: 0.88; transform: translateY(-1px); }
 
@@ -174,6 +174,7 @@
   cursor: pointer;
   transition: all var(--ease);
   min-width: 40px;
+  white-space: nowrap; /* ✅ FIX: ไม่ให้ตัดบรรทัด */
 }
 .btn-delete:hover { background: var(--danger); color: #fff; transform: none; opacity: 1; }
 
@@ -188,6 +189,7 @@
   cursor: pointer;
   transition: all var(--ease);
   min-width: 40px;
+  white-space: nowrap; /* ✅ FIX: ไม่ให้ตัดบรรทัด */
 }
 .btn:hover { background: var(--bg-subtle); transform: none; opacity: 1; }
 .btn.primary {
@@ -303,7 +305,7 @@
   display: grid;
   grid-template-columns: 80px 1fr 105px 75px 150px;
   gap: var(--space-3);
-  align-items: center; /* เพิ่มบรรทัดนี้ */
+  align-items: center;
   padding: 6px 0;
   font-size: 0.8rem;
 }
@@ -335,7 +337,7 @@
   display: flex;
   justify-content: center;
   text-align: center;
-  white-space: nowrap; /* เพิ่มบรรทัดนี้ */
+  white-space: nowrap;
 }
 
 /* ── Action Group ── */
@@ -348,6 +350,7 @@
 .button-group {
   display: flex;
   gap: var(--space-1);
+  flex-wrap: nowrap; /* ✅ FIX: ไม่ให้ปุ่มตกบรรทัด */
 }
 
 /* ── Responsive ── */
@@ -359,10 +362,32 @@
   .form-grid { grid-template-columns: 1fr; }
   .installment-grid { grid-template-columns: 1fr; }
   .install-row { grid-template-columns: repeat(2, 1fr); }
+
+  /* ✅ FIX: ลด grid เป็น 4 คอลัมน์ + ซ่อน "ประเภท" */
   .table .thead, .table .trow {
-    grid-template-columns: 80px 1fr 60px auto; /* เปลี่ยน 50px → 80px */
+    grid-template-columns: 72px 1fr 68px auto;
     gap: var(--space-2);
     font-size: 0.72rem;
+  }
+
+  /* ✅ FIX: ซ่อนคอลัมน์ "ประเภท" (nth-child 3) บน mobile */
+  .table .thead div:nth-child(3),
+  .table .trow div:nth-child(3) {
+    display: none;
+  }
+
+  /* ✅ FIX: ปุ่มเล็กลงบน mobile */
+  .btn, .btn-delete {
+    font-size: 0.72rem;
+    padding: 5px 8px;
+  }
+
+  /* ✅ FIX: action-group แนวนอนบน mobile */
+  .action-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
   }
 }
 
@@ -372,16 +397,19 @@
   .chart { grid-template-columns: repeat(3, 1fr); }
   .tab-row { gap: 6px; }
 
-  /* เพิ่ม !important เพื่อ override */
   .card-container { flex-direction: column !important; }
   .card-box-1, .card-box-2 { max-width: 100% !important; width: 100%; }
   .installment-grid { grid-template-columns: 1fr; }
 }
+
 @media (max-width: 360px) {
+  /* ✅ FIX: ซ่อนคอลัมน์วันที่ด้วย เหลือแค่ รายการ + จำนวน + action */
   .table .thead, .table .trow {
-    grid-template-columns: 1fr 70px 110px;
-    font-size: 0.7rem;
+    grid-template-columns: 1fr 60px auto;
+    font-size: 0.68rem;
   }
   .table .thead div:nth-child(1),
-  .table .trow div:nth-child(1) { display: none; }
+  .table .trow div:nth-child(1),
+  .table .thead div:nth-child(3),
+  .table .trow div:nth-child(3) { display: none; }
 }
