@@ -301,7 +301,7 @@
 /* ── Table ── */
 .table .thead, .table .trow {
   display: grid;
-  grid-template-columns: 90px 1fr 80px 160px; /* เปลี่ยน 70px → 90px */
+  grid-template-columns: 80px 1fr 105px 75px 150px;
   gap: var(--space-3);
   align-items: center; /* เพิ่มบรรทัดนี้ */
   padding: 6px 0;

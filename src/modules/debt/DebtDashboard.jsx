@@ -12,6 +12,12 @@ function showDate(d) {
 }
 function ym(d) {
   if (!d) return "";
+  if (d.includes("/")) {
+    const parts = d.split("/");
+    const y = parts[2];
+    const m = String(parts[1]).padStart(2, "0");
+    return `${y}-${m}`;
+  }
   return d.slice(0, 7);
 }
 function todayISO() {
@@ -49,7 +55,7 @@ export default function DebtDashboard() {
   const [selectedCardId, setSelectedCardId] = useState("");
   const [itemName, setItemName] = useState("");
   const [isInstallment, setIsInstallment] = useState(false);
-  const [installCardId, setInstallCardId] = useState(""); // บัตรที่ใช้ผ่อน
+  const [installCardId, setInstallCardId] = useState(""); // บัตรที่ใช้ผ่อน  ← แก้แล้ว
   const [amount, setAmount] = useState("");
   const [perMonth, setPerMonth] = useState("");
   const [months, setMonths] = useState("");
@@ -439,7 +445,7 @@ export default function DebtDashboard() {
                 <option value="credit">บัตรเครดิต</option>
               </select>
 
-              {sourceType === "credit" && !isInstallment && (
+              {sourceType === "credit" && (
                 <select value={selectedCardId} onChange={(e) => setSelectedCardId(e.target.value)}>
                   <option value="">-- เลือกบัตร --</option>
                   {cards.map((c) => (
@@ -467,16 +473,6 @@ export default function DebtDashboard() {
 
               {isInstallment && (
                 <>
-                  {/* ← เพิ่ม: เลือกบัตรสำหรับผ่อน */}
-                  <select value={installCardId} onChange={(e) => setInstallCardId(e.target.value)}>
-                    <option value="">-- ระบุบัตร (ถ้ามี) --</option>
-                    {cards.map((c) => (
-                      <option key={c.cardId} value={c.cardId}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-
                   <input
                     type="number"
                     placeholder="ยอดต่อเดือน"
@@ -519,7 +515,6 @@ export default function DebtDashboard() {
                     const sum = per * total;
                     const isOpen = openPlanId === planId;
 
-                    // ← ค้นหาชื่อบัตรจาก category (index 4)
                     const planCardId = plan[0][4];
                     const planCardName = cards.find((c) => c.cardId === planCardId)?.name;
 
@@ -530,7 +525,6 @@ export default function DebtDashboard() {
                             {name} <span className="chev">{isOpen ? "▾" : "▸"}</span>
                           </div>
 
-                          {/* ← แสดงชื่อบัตร */}
                           {planCardName && (
                             <div className="muted" style={{ fontSize: "0.72rem", color: "var(--accent)", marginBottom: "2px" }}>
                               💳 {planCardName}
@@ -633,6 +627,7 @@ export default function DebtDashboard() {
                 <div className="thead">
                   <div>วันที่</div>
                   <div>รายการ</div>
+                  <div>ประเภท</div>
                   <div>จำนวนเงิน</div>
                   <div>สถานะ</div>
                 </div>
@@ -641,6 +636,12 @@ export default function DebtDashboard() {
                   <div className="trow" key={i}>
                     <div>{showDate(r[1])}</div>
                     <div>{r[3]}</div>
+                      <div>  {/* ← เพิ่ม */}
+                        {r[2] === "credit"
+                          ? <span className="badge" style={{background:"#dbeafe",color:"#1d4ed8"}}>💳 บัตรเครดิต</span>
+                          : <span className="badge" style={{background:"#f0fdf4",color:"#15803d"}}>🧾 บิล</span>
+                        }
+                    </div>
                     <div>{currency(r[5])}</div>
                     <div className="action-group">
                       <div className="status-badge">
