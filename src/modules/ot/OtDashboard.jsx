@@ -6,6 +6,7 @@ export default function OtDashboard() {
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [data, setData] = useState([]);
+  const [showSalary, setShowSalary] = useState(false); // เริ่มต้นเป็น false (ปิดตา)
 
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem("app_config");
@@ -57,9 +58,13 @@ export default function OtDashboard() {
   const otSummary = useMemo(() => {
     let totalHrsCurrentCycle = 0;
     let allowanceCurrentCycle = 0;
-    const monthlyStatsMap = {};
-    const currentCycleRows = [];
+    
+    // 1. เพิ่มตัวแปรเก็บสะสมชั่วโมงแยกประเภท
+    let hrsX1 = 0;
+    let hrsX15 = 0;
+    let hrsX3 = 0;
 
+    const currentCycleRows = [];
     const toInt = (d) => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
 
     const now = new Date();
@@ -82,44 +87,27 @@ export default function OtDashboard() {
       const rowDateInt = toInt(new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate()));
 
       const foodNormal = Number(row[6]) || 0;
-      const foodOt = Number(row[7]) || 0;
       const gas = Number(row[8]) || 0;
+      const isOt15or3 = (Number(row[2]) || 0) > 0 || (Number(row[3]) || 0) > 0;
+      const foodOt = isOt15or3 ? (Number(row[7]) || 0) : 0;
       const dailyTotalAllowance = foodNormal + foodOt + gas;
 
       if (rowDateInt >= startInt && rowDateInt <= endInt) {
         allowanceCurrentCycle += dailyTotalAllowance;
         currentCycleRows.push(row);
       }
-
-      const rowDate = new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate());
-      let cycleDateForGraph = new Date(rowDate);
-      if (rowDate.getDate() > 20) {
-        cycleDateForGraph.setMonth(rowDate.getMonth() + 1);
-      }
-
-      const cycleKey = cycleDateForGraph.toLocaleDateString("th-TH", { month: "short", year: "2-digit" });
-
-      const hrs =
-        (Number(row[1]) || 0) +
-        Number(row[2]) * 1.5 +
-        Number(row[3]) * 3;
-
-      const dailyIncome = hrs * config.otRate + dailyTotalAllowance;
-
-      if (toInt(cycleDateForGraph) <= endInt) {
-        if (!monthlyStatsMap[cycleKey]) {
-          monthlyStatsMap[cycleKey] = {
-            total: Number(config.salary) - Number(config.deduct) + Number(config.incentive),
-            dateObj: new Date(cycleDateForGraph.getFullYear(), cycleDateForGraph.getMonth(), 1),
-          };
-        }
-        monthlyStatsMap[cycleKey].total += dailyIncome;
-      }
     });
 
+    // 2. คำนวณชั่วโมงแยกประเภทจากข้อมูลรอบปัจจุบัน
     currentCycleRows.forEach((row) => {
-      totalHrsCurrentCycle +=
-        (Number(row[1]) || 0) + (Number(row[2]) || 0) + (Number(row[3]) || 0);
+      const h1 = Number(row[1]) || 0;
+      const h15 = Number(row[2]) || 0;
+      const h3 = Number(row[3]) || 0;
+
+      hrsX1 += h1;
+      hrsX15 += h15;
+      hrsX3 += h3;
+      totalHrsCurrentCycle += (h1 + h15 + h3);
     });
 
     const otPay = currentCycleRows.reduce(
@@ -140,6 +128,9 @@ export default function OtDashboard() {
 
     return {
       totalHrs: totalHrsCurrentCycle,
+      hrsX1,  
+      hrsX15, 
+      hrsX3,  
       otPay,
       netSalary,
       allowance: allowanceCurrentCycle,
@@ -150,7 +141,6 @@ export default function OtDashboard() {
   const handleAddOt = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     const checkDate = new Date(otForm.date);
     const isSunday = checkDate.getDay() === 0;
     const finalDayType = isSunday ? "holiday" : otForm.dayType;
@@ -159,6 +149,7 @@ export default function OtDashboard() {
       await fetch(API_URL, {
         method: "POST",
         mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({
           type: "add_ot",
           ...otForm,
@@ -186,6 +177,7 @@ export default function OtDashboard() {
       await fetch(API_URL, {
         method: "POST",
         mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({ type: "delete_ot", rowIndex }),
       });
       setTimeout(fetchOt, 800);
@@ -237,28 +229,50 @@ export default function OtDashboard() {
 
       <div className="summary-grid">
         <div className="card primary">
-          <div className="card-label">รายรับสุทธิ</div>
-          <div className="card-value">฿{otSummary.netSalary.toLocaleString()}</div>
+          <div className="card-label-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="card-label">รายรับสุทธิ</div>
+            <button 
+              onClick={() => setShowSalary(!showSalary)} 
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+            >
+              {showSalary ? "👁️" : "🙈"}
+            </button>
+          </div>
+          <div className="card-value">
+            ฿ {showSalary 
+              ? Math.floor(otSummary.netSalary).toLocaleString() 
+              : "******"}
+          </div>
         </div>
+
         <div className="card">
           <div className="card-label">สะสม OT รอบนี้</div>
           <div className="card-value">
             {otSummary.totalHrs.toFixed(1)} ชม.
           </div>
-          <div className="card-sub">+ ฿{otSummary.otPay.toLocaleString()} (จากแรง OT)</div>
+          
+          {/* 3. ส่วนแสดง ชม. แยกประเภท x1, x1.5, x3 */}
+          <div style={{ display: 'flex', justifyContent: 'space-around', fontSize: '0.85rem', margin: '4px 0', color: '#64748b', fontWeight: 'bold' }}>
+            <span>x1: {otSummary.hrsX1}</span>
+            <span>x1.5: {otSummary.hrsX15}</span>
+            <span>x3: {otSummary.hrsX3}</span>
+          </div>
+
+          <div className="card-sub">
+            {/* 4. ยกเลิกการใช้ showSalary ตรงนี้เพื่อให้โชว์ยอดเงินตลอดเวลา */}
+             ฿ {Math.floor(otSummary.otPay).toLocaleString()} 
+          </div>
         </div>
       </div>
 
       <div className="main-grid">
         <form className="form-card" onSubmit={handleAddOt}>
           <h3>บันทึกสถานะรายวัน</h3>
-
           <input
             type="date"
             value={otForm.date}
             onChange={(e) => setOtForm({ ...otForm, date: e.target.value })}
           />
-
           <div className="toggle-row">
             <button
               type="button"
@@ -275,7 +289,6 @@ export default function OtDashboard() {
               🏖️ วันหยุด
             </button>
           </div>
-
           <div className="ot-inputs">
             {["ot1", "ot15", "ot3"].map((k, i) => (
               <input
@@ -291,13 +304,11 @@ export default function OtDashboard() {
               />
             ))}
           </div>
-
           <textarea
             placeholder="หมายเหตุ..."
             value={otForm.note}
             onChange={(e) => setOtForm({ ...otForm, note: e.target.value })}
           />
-
           <button type="submit" className="btn-primary">
             {otForm.dayType === "work" ? "บันทึกวันทำงาน" : "บันทึกวันหยุด"}
           </button>
@@ -308,7 +319,6 @@ export default function OtDashboard() {
             <h3>ประวัติ (รอบปัจจุบัน 21-20)</h3>
             <span>สวัสดิการรอบนี้: ฿{otSummary.allowance.toLocaleString()}</span>
           </div>
-
           <div className="history-list">
             {otSummary.currentCycleData.length > 0 ? (
               otSummary.currentCycleData.map((row, idx) => (
@@ -323,15 +333,18 @@ export default function OtDashboard() {
                     <div className="detail">{renderOtDetails(row)}</div>
                     <div className="money">
                       ฿
-                      {(
-                        ((Number(row[1]) || 0) +
-                          Number(row[2]) * 1.5 +
-                          Number(row[3]) * 3) *
-                          config.otRate +
-                        (Number(row[6]) || 0) +
-                        (Number(row[7]) || 0) +
-                        (Number(row[8]) || 0)
-                      ).toLocaleString()}
+                      {(() => {
+                        const isOt15or3 = (Number(row[2]) || 0) > 0 || (Number(row[3]) || 0) > 0;
+                        return (
+                          ((Number(row[1]) || 0) +
+                            Number(row[2]) * 1.5 +
+                            Number(row[3]) * 3) *
+                            config.otRate +
+                          (Number(row[6]) || 0) +
+                          (isOt15or3 ? (Number(row[7]) || 0) : 0) +
+                          (Number(row[8]) || 0)
+                        ).toLocaleString();
+                      })()}
                     </div>
                     <button className="btn-delete" onClick={() => handleDeleteOt(row[10])}>
                       🗑️

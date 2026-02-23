@@ -70,10 +70,44 @@ body {
   padding: 24px;
 }
 
+/* จัดวาง Label และ ปุ่มให้อยู่แถวเดียวกัน */
+.card-label-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px; /* ปรับระยะห่างตามความเหมาะสม */
+}
+
+/* ปรับแต่งปุ่ม Toggle */
+.toggle-btn {
+  background: rgba(255, 255, 255, 0.2); /* ทำพื้นหลังปุ่มให้โปร่งแสงขาวๆ */
+  border: none;
+  border-radius: 6px;
+  color: white;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.4); /* สว่างขึ้นเมื่อเอาเมาส์วาง */
+}
+
+.toggle-btn:active {
+  transform: scale(0.95); /* เอฟเฟกต์ตอนกด */
+}
+
+/* ของเดิมของคุณ */
 .card.primary {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: #fff;
 }
+
+
 
 .card-label {
   font-size: 14px;

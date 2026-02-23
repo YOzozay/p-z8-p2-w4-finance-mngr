@@ -1,68 +1,178 @@
+/* ============================================================
+   INDEX.CSS — Global Base + Design Tokens
+   Theme: Slate Financial — Clean, Calm, Professional
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+/* ── Design Tokens ── */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* Core Palette - Light */
+  --bg-base:        #f0f2f7;
+  --bg-surface:     #ffffff;
+  --bg-subtle:      #f7f8fc;
+  --bg-muted:       #eef0f6;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  --border:         #e2e5ef;
+  --border-strong:  #c8cde0;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+  --text-primary:   #1a1f36;
+  --text-secondary: #5a6182;
+  --text-muted:     #8b92aa;
+  --text-inverse:   #ffffff;
+
+  /* Brand Accent */
+  --accent:         #3d6ff8;
+  --accent-hover:   #2d5ce0;
+  --accent-soft:    #eef2ff;
+
+  /* Semantic */
+  --success:        #16a34a;
+  --success-soft:   #dcfce7;
+  --warning:        #ea7c0a;
+  --warning-soft:   #fff3e0;
+  --danger:         #dc2626;
+  --danger-soft:    #fee2e2;
+  --info:           #0891b2;
+  --info-soft:      #e0f7fa;
+
+  /* Elevation */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg:  0 12px 32px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06);
+
+  /* Radii */
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  20px;
+  --radius-full: 999px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* Transition */
+  --ease: 0.2s ease;
+}
+
+/* ── Dark Mode ── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-base:        #0f1117;
+    --bg-surface:     #1a1e2e;
+    --bg-subtle:      #1e2235;
+    --bg-muted:       #252a3e;
+
+    --border:         #2a2f46;
+    --border-strong:  #3a4060;
+
+    --text-primary:   #e8ebf4;
+    --text-secondary: #9ba3bf;
+    --text-muted:     #6472a0;
+    --text-inverse:   #0f1117;
+
+    --accent:         #5b87ff;
+    --accent-hover:   #7099ff;
+    --accent-soft:    #1a2545;
+
+    --success:        #22c55e;
+    --success-soft:   #0d2d1a;
+    --warning:        #fb923c;
+    --warning-soft:   #2d1a06;
+    --danger:         #f87171;
+    --danger-soft:    #2d0d0d;
+    --info:           #22d3ee;
+    --info-soft:      #072c35;
+
+    --shadow-sm:  0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-md:  0 4px 12px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.2);
+    --shadow-lg:  0 12px 32px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.3);
+  }
+}
+
+/* ── Global Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-base);
+  min-height: 100vh;
+  min-width: 320px;
 }
 
 a {
   font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--ease);
 }
-a:hover {
-  color: #535bf2;
-}
+a:hover { color: var(--accent-hover); }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
+h1 { font-size: clamp(1.8rem, 5vw, 3.2rem); line-height: 1.15; font-weight: 800; }
+h2 { font-size: clamp(1.4rem, 3vw, 1.75rem); font-weight: 700; }
+h3 { font-size: 1.125rem; font-weight: 700; }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+p { color: var(--text-secondary); }
 
 button {
-  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  padding: 0.5em 1.1em;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all var(--ease);
+  background-color: var(--bg-muted);
+  color: var(--text-primary);
 }
-button:hover {
-  border-color: #646cff;
+button:hover { opacity: 0.85; transform: translateY(-1px); }
+button:active { transform: translateY(0); }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+input, select, textarea {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  transition: border-color var(--ease), box-shadow var(--ease);
+  width: 100%;
 }
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
