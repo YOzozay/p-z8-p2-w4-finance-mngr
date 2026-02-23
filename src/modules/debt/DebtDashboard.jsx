@@ -439,7 +439,7 @@ export default function DebtDashboard() {
                 <option value="credit">บัตรเครดิต</option>
               </select>
 
-              {sourceType === "credit" && (
+              {sourceType === "credit" && !isInstallment && (
                 <select value={selectedCardId} onChange={(e) => setSelectedCardId(e.target.value)}>
                   <option value="">-- เลือกบัตร --</option>
                   {cards.map((c) => (
