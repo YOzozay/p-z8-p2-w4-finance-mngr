@@ -240,8 +240,9 @@
   .car-root { padding: var(--space-4); }
   .car-summary { grid-template-columns: 1fr 1fr; }
   .car-summary-card:last-child { grid-column: span 2; }
-  .car-history-header { grid-template-columns: 44px 1fr 100px 64px; }
-  .car-row { grid-template-columns: 44px 1fr 100px 64px; font-size: 0.82rem; }
+  /* ซ่อนแค่คอลัมน์ "หมายเหตุ" (ที่ 3) เก็บ: งวด | วันที่ | ยอด | สถานะ | ปุ่ม */
+  .car-history-header { grid-template-columns: 44px 1fr 90px 80px; }
+  .car-row { grid-template-columns: 44px 1fr 90px 80px; font-size: 0.82rem; }
   .car-row > *:nth-child(3) { display: none; }
   .car-history-header > *:nth-child(3) { display: none; }
 }
@@ -249,8 +250,23 @@
 @media (max-width: 480px) {
   .car-summary { grid-template-columns: 1fr; }
   .car-summary-card:last-child { grid-column: span 1; }
-  .car-history-header { grid-template-columns: 36px 1fr 90px; }
-  .car-row { grid-template-columns: 36px 1fr 90px; }
-  .car-row > *:nth-child(4) { display: none; }
-  .car-history-header > *:nth-child(4) { display: none; }
+
+  /* คืน child(3) จำนวนเงิน กลับมา (ที่ถูกซ่อนจาก 768px rule) */
+  .car-row > *:nth-child(3) { display: block; }
+  .car-history-header > *:nth-child(3) { display: block; }
+
+  /* ซ่อนวันที่แทน */
+  .car-row > *:nth-child(2) { display: none; }
+  .car-history-header > *:nth-child(2) { display: none; }
+
+  /* grid ใหม่: #งวด | ยอดเงิน | สถานะ | ปุ่ม */
+  .car-history-header { grid-template-columns: 36px 1fr 80px 60px; }
+  .car-row {
+    grid-template-columns: 36px 1fr 80px 60px;
+    font-size: 0.78rem;
+    padding: 8px var(--space-3);
+  }
+  .car-row-amount { font-size: 0.78rem; }
+  .car-row-status { font-size: 0.68rem; padding: 3px 6px; }
+  .car-row-pay { padding: 3px 8px; font-size: 0.7rem; }
 }

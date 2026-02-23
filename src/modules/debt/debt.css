@@ -32,11 +32,16 @@
   gap: var(--space-5);
   width: 100%;
   align-items: flex-start;
-  justify-content: space-around;
+  justify-content: flex-start; /* เปลี่ยนจาก space-around */
 }
-.card-box-1, .card-box-2 {
-  flex: 1;
-  max-width: 440px;
+/* เป็น */
+.card-box-1 {
+  flex: 0 0 520px;   /* กว้างคงที่ ไม่ขยาย */
+  max-width: 520px;
+}
+.card-box-2 {
+  flex: 1;           /* กินพื้นที่ที่เหลือทั้งหมด */
+  min-width: 0;      /* ป้องกัน overflow */
 }
 
 /* ── Summary Grid (3 stats) ── */
@@ -296,9 +301,9 @@
 /* ── Table ── */
 .table .thead, .table .trow {
   display: grid;
-  grid-template-columns: 70px 1fr 80px 160px;
+  grid-template-columns: 90px 1fr 80px 160px; /* เปลี่ยน 70px → 90px */
   gap: var(--space-3);
-  align-items: center;
+  align-items: center; /* เพิ่มบรรทัดนี้ */
   padding: 6px 0;
   font-size: 0.8rem;
 }
@@ -330,6 +335,7 @@
   display: flex;
   justify-content: center;
   text-align: center;
+  white-space: nowrap; /* เพิ่มบรรทัดนี้ */
 }
 
 /* ── Action Group ── */
@@ -354,7 +360,7 @@
   .installment-grid { grid-template-columns: 1fr; }
   .install-row { grid-template-columns: repeat(2, 1fr); }
   .table .thead, .table .trow {
-    grid-template-columns: 50px 1fr 60px auto;
+    grid-template-columns: 80px 1fr 60px auto; /* เปลี่ยน 50px → 80px */
     gap: var(--space-2);
     font-size: 0.72rem;
   }
@@ -365,4 +371,17 @@
   .summary-grid { grid-template-columns: 1fr; }
   .chart { grid-template-columns: repeat(3, 1fr); }
   .tab-row { gap: 6px; }
+
+  /* เพิ่ม !important เพื่อ override */
+  .card-container { flex-direction: column !important; }
+  .card-box-1, .card-box-2 { max-width: 100% !important; width: 100%; }
+  .installment-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 360px) {
+  .table .thead, .table .trow {
+    grid-template-columns: 1fr 70px 110px;
+    font-size: 0.7rem;
+  }
+  .table .thead div:nth-child(1),
+  .table .trow div:nth-child(1) { display: none; }
 }

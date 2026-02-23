@@ -230,6 +230,15 @@ export default function DebtDashboard() {
     return Object.values(map);
   }, [debts]);
 
+    // ยอดผ่อนต่อเดือนรวมทุกแผนที่ยังไม่ครบ
+  const installmentMonthlyTotal = useMemo(() => {
+    return installmentPlans.reduce((sum, plan) => {
+      const hasUnpaid = plan.some((r) => r[6] !== "yes");
+      if (!hasUnpaid) return sum; // แผนที่จ่ายครบแล้วไม่นับ
+      return sum + Number(plan[0][5] || 0); // plan[0][5] = ยอดต่อเดือน
+    }, 0);
+  }, [installmentPlans]);
+
   const installmentTotalPreview = useMemo(() => {
     const pm = Number(perMonth || 0);
     const mo = Number(months || 0);
@@ -321,7 +330,12 @@ export default function DebtDashboard() {
         <div className="summary-grid">
           <div className="sum-card">
             <div className="label">ต้องจ่าย</div>
-            <div className="value">{currency(monthTotal)}</div>
+            <div className="value">{currency(monthTotal + installmentMonthlyTotal)}</div>
+            {installmentMonthlyTotal > 0 && (
+              <div className="muted">
+                บิล {currency(monthTotal)} + ผ่อน {currency(installmentMonthlyTotal)}
+              </div>
+            )}
           </div>
           <div className="sum-card ok">
             <div className="label">จ่ายแล้ว</div>
