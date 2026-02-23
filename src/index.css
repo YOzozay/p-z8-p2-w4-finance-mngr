@@ -1,13 +1,12 @@
 /* ============================================================
    INDEX.CSS — Global Base + Design Tokens
-   Theme: Slate Financial — Clean, Calm, Professional
+   Theme: MY HUB — Clean, Calm, Professional
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
 
 /* ── Design Tokens ── */
 :root {
-  /* Core Palette - Light */
   --bg-base:        #f0f2f7;
   --bg-surface:     #ffffff;
   --bg-subtle:      #f7f8fc;
@@ -21,12 +20,10 @@
   --text-muted:     #8b92aa;
   --text-inverse:   #ffffff;
 
-  /* Brand Accent */
   --accent:         #3d6ff8;
   --accent-hover:   #2d5ce0;
   --accent-soft:    #eef2ff;
 
-  /* Semantic */
   --success:        #16a34a;
   --success-soft:   #dcfce7;
   --warning:        #ea7c0a;
@@ -36,19 +33,16 @@
   --info:           #0891b2;
   --info-soft:      #e0f7fa;
 
-  /* Elevation */
   --shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
   --shadow-lg:  0 12px 32px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06);
 
-  /* Radii */
   --radius-sm:  8px;
   --radius-md:  12px;
   --radius-lg:  16px;
   --radius-xl:  20px;
   --radius-full: 999px;
 
-  /* Spacing */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -57,12 +51,11 @@
   --space-6: 24px;
   --space-8: 32px;
 
-  /* Typography */
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
 
-  /* Transition */
   --ease: 0.2s ease;
+  --sidebar-width: 230px;
 }
 
 /* ── Dark Mode ── */
@@ -133,8 +126,8 @@ a {
 a:hover { color: var(--accent-hover); }
 
 h1 { font-size: clamp(1.8rem, 5vw, 3.2rem); line-height: 1.15; font-weight: 800; }
-h2 { font-size: clamp(1.4rem, 3vw, 1.75rem); font-weight: 700; }
-h3 { font-size: 1.125rem; font-weight: 700; }
+h2 { font-size: clamp(1.2rem, 3vw, 1.5rem); font-weight: 700; }
+h3 { font-size: 1.05rem; font-weight: 700; }
 
 p { color: var(--text-secondary); }
 
@@ -168,11 +161,11 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+  box-shadow: 0 0 0 3px rgba(61,111,248,0.12);
 }
 
 /* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
