@@ -49,6 +49,7 @@ export default function DebtDashboard() {
   const [selectedCardId, setSelectedCardId] = useState("");
   const [itemName, setItemName] = useState("");
   const [isInstallment, setIsInstallment] = useState(false);
+  const [installCardId, setInstallCardId] = useState(""); // บัตรที่ใช้ผ่อน
   const [amount, setAmount] = useState("");
   const [perMonth, setPerMonth] = useState("");
   const [months, setMonths] = useState("");
@@ -63,15 +64,25 @@ export default function DebtDashboard() {
 
   // ---- load ----
   async function loadCards() {
-    const res = await fetch(`${API_URL}?mode=cards`);
-    const data = await res.json();
-    setCards(Array.isArray(data) ? data : []);
+    try {
+      const res = await fetch(`${API_URL}?mode=cards`);
+      const data = await res.json();
+      setCards(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("loadCards error", e);
+      alert("โหลดข้อมูลบัตรไม่สำเร็จ กรุณารีเฟรชหน้า");
+    }
   }
 
   async function loadDebts() {
-    const res = await fetch(`${API_URL}?mode=debt`);
-    const data = await res.json();
-    setDebts(Array.isArray(data) ? data : []);
+    try {
+      const res = await fetch(`${API_URL}?mode=debt`);
+      const data = await res.json();
+      setDebts(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("loadDebts error", e);
+      alert("โหลดข้อมูลหนี้ไม่สำเร็จ กรุณารีเฟรชหน้า");
+    }
   }
 
   useEffect(() => {
@@ -201,7 +212,7 @@ export default function DebtDashboard() {
           type: "add_installment_plan",
           startDate: date,
           name: itemName.trim(),
-          category: "",
+          category: installCardId, // ← เก็บ cardId ไว้ใน category
           perMonth: Number(perMonth),
           months: Number(months),
         }),
@@ -213,6 +224,7 @@ export default function DebtDashboard() {
     setPerMonth("");
     setMonths("");
     setSelectedCardId("");
+    setInstallCardId("");
     await loadDebts();
   }
 
@@ -230,12 +242,12 @@ export default function DebtDashboard() {
     return Object.values(map);
   }, [debts]);
 
-    // ยอดผ่อนต่อเดือนรวมทุกแผนที่ยังไม่ครบ
+  // ยอดผ่อนต่อเดือนรวมทุกแผนที่ยังไม่ครบ
   const installmentMonthlyTotal = useMemo(() => {
     return installmentPlans.reduce((sum, plan) => {
       const hasUnpaid = plan.some((r) => r[6] !== "yes");
-      if (!hasUnpaid) return sum; // แผนที่จ่ายครบแล้วไม่นับ
-      return sum + Number(plan[0][5] || 0); // plan[0][5] = ยอดต่อเดือน
+      if (!hasUnpaid) return sum;
+      return sum + Number(plan[0][5] || 0);
     }, 0);
   }, [installmentPlans]);
 
@@ -455,6 +467,16 @@ export default function DebtDashboard() {
 
               {isInstallment && (
                 <>
+                  {/* ← เพิ่ม: เลือกบัตรสำหรับผ่อน */}
+                  <select value={installCardId} onChange={(e) => setInstallCardId(e.target.value)}>
+                    <option value="">-- ระบุบัตร (ถ้ามี) --</option>
+                    {cards.map((c) => (
+                      <option key={c.cardId} value={c.cardId}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+
                   <input
                     type="number"
                     placeholder="ยอดต่อเดือน"
@@ -474,13 +496,12 @@ export default function DebtDashboard() {
               )}
 
               <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
-                  <button className="btn-add" onClick={addItem} style={{ width: '400xp' }}> 
-                    + เพิ่มรายการ
-                  </button>
-                </div>
+                <button className="btn-add" onClick={addItem}>
+                  + เพิ่มรายการ
+                </button>
+              </div>
             </div>
           </div>
-        
 
           <div className="card-container">
             {/* --------- INSTALLMENTS (slide animation) --------- */}
@@ -498,12 +519,24 @@ export default function DebtDashboard() {
                     const sum = per * total;
                     const isOpen = openPlanId === planId;
 
+                    // ← ค้นหาชื่อบัตรจาก category (index 4)
+                    const planCardId = plan[0][4];
+                    const planCardName = cards.find((c) => c.cardId === planCardId)?.name;
+
                     return (
                       <div key={idx} className="install-wrap">
                         <div className="install-card clickable" onClick={() => setOpenPlanId(isOpen ? null : planId)}>
                           <div className="title">
                             {name} <span className="chev">{isOpen ? "▾" : "▸"}</span>
                           </div>
+
+                          {/* ← แสดงชื่อบัตร */}
+                          {planCardName && (
+                            <div className="muted" style={{ fontSize: "0.72rem", color: "var(--accent)", marginBottom: "2px" }}>
+                              💳 {planCardName}
+                            </div>
+                          )}
+
                           <div className="muted">
                             {paid}/{total} งวด
                           </div>
@@ -610,13 +643,13 @@ export default function DebtDashboard() {
                     <div>{r[3]}</div>
                     <div>{currency(r[5])}</div>
                     <div className="action-group">
-                        <div className="status-badge">
-                          {r[6] === "yes" ? <span className="badge ok">จ่ายแล้ว</span> : <span className="badge wait">ค้างจ่าย</span>}
-                        </div>
-                        <div className="button-group">
-                          <button className="btn-delete" onClick={() => deleteDebt(r[0])}>ลบ</button>
-                          <button className="btn" onClick={() => togglePaid(r[0])}>สลับสถานะ</button>
-                        </div>
+                      <div className="status-badge">
+                        {r[6] === "yes" ? <span className="badge ok">จ่ายแล้ว</span> : <span className="badge wait">ค้างจ่าย</span>}
+                      </div>
+                      <div className="button-group">
+                        <button className="btn-delete" onClick={() => deleteDebt(r[0])}>ลบ</button>
+                        <button className="btn" onClick={() => togglePaid(r[0])}>สลับสถานะ</button>
+                      </div>
                     </div>
                   </div>
                 ))}
