@@ -20,8 +20,6 @@ export default function OtDashboard() {
           foodOt: 30,
           gas: 55,
           incentive: 1000,
-          carPrice: 12220,
-          totalInstallments: 72,
         };
   });
 
@@ -148,7 +146,7 @@ export default function OtDashboard() {
     try {
       await fetch(API_URL, {
         method: "POST",
-        mode: "no-cors",
+        /*de: "no-cors",*/
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({
           type: "add_ot",
@@ -176,7 +174,7 @@ export default function OtDashboard() {
     try {
       await fetch(API_URL, {
         method: "POST",
-        mode: "no-cors",
+       /*ode: "no-cors",*/
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({ type: "delete_ot", rowIndex }),
       });

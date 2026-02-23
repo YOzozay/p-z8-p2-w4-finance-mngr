@@ -1,3 +1,3 @@
 // src/config/api.js
 export const API_URL =
-  "https://script.google.com/macros/s/AKfycbyKLq1i8IrSC-Qbqz1pAORIev9zrRoHM8wocDj9HNxggHhD13V0_NL3Q5eHUSVWBnuT1Q/exec";
+  "https://script.google.com/macros/s/AKfycbzkXpioNbFG4lo2eN7h0CbDBRl8mOWICqGiw8gPhmqhJ_xfZisoNKYPWkKXhJbInRRVzQ/exec";

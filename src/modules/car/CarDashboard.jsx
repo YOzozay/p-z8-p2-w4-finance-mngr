@@ -61,7 +61,7 @@ export default function CarDashboard() {
     try {
       await fetch(API_URL, {
         method: "POST",
-        mode: "no-cors",
+        /*mode: "no-cors",*/
         body: JSON.stringify({ type: "pay_car", no }),
       });
       setTimeout(fetchCar, 600);
