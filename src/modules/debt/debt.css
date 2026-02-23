@@ -329,11 +329,21 @@
 .table .trow div:nth-child(2) {
   text-align: left;
   line-height: 1.4;
-  word-break: break-word;
-  overflow-wrap: break-word;
+  /* ✅ FIX: ป้องกันข้อความตกแนวตั้ง */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
-.table .thead div:nth-child(1), .table .trow div:nth-child(1),
-.table .thead div:nth-child(3), .table .trow div:nth-child(3) {
+/* ✅ thead ทุก column อยู่กลาง */
+.table .thead div {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.table .trow div:nth-child(1),
+.table .trow div:nth-child(3) {
   display: flex;
   justify-content: center;
   text-align: center;
@@ -353,41 +363,100 @@
   flex-wrap: nowrap; /* ✅ FIX: ไม่ให้ปุ่มตกบรรทัด */
 }
 
+/* ── Tablet Landscape (Sidebar + 2-col layout) ── */
+@media (min-width: 769px) and (max-width: 1200px) {
+  /* ลด card-box-1 ให้แคบลง เพื่อให้ card-box-2 มีพื้นที่มากขึ้น */
+  .card-box-1 {
+    flex: 0 0 280px;
+    max-width: 280px;
+  }
+
+  /* ปรับ columns ของตารางให้พอดีกับพื้นที่ที่แคบลง */
+  .table .thead, .table .trow {
+    grid-template-columns: 80px 1fr 90px 65px 130px;
+    gap: var(--space-2);
+    font-size: 0.75rem;
+  }
+
+  /* action-group แนวนอนบน tablet */
+  .action-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .btn, .btn-delete {
+    font-size: 0.72rem;
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .debt-page { padding: var(--space-4); }
-  .card-container { flex-direction: column; }
-  .card-box-1, .card-box-2 { max-width: 100%; }
+
+  /* ✅ FIX: stack installment แล้วตามด้วย รายการทั้งหมด */
+  .card-container {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .card-box-1,
+  .card-box-2 {
+    flex: unset;
+    max-width: 100%;
+    width: 100%;
+  }
+
   .summary-grid { grid-template-columns: repeat(2, 1fr); }
   .form-grid { grid-template-columns: 1fr; }
   .installment-grid { grid-template-columns: 1fr; }
   .install-row { grid-template-columns: repeat(2, 1fr); }
 
-  /* ✅ FIX: ลด grid เป็น 4 คอลัมน์ + ซ่อน "ประเภท" */
-  .table .thead, .table .trow {
-    grid-template-columns: 72px 1fr 68px auto;
+  /* ✅ FIX: ตาราง 3 คอลัมน์ วันที่ | รายการ | จำนวนเงิน */
+  .table .thead {
+    grid-template-columns: 82px 1fr 74px;
     gap: var(--space-2);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
+  }
+  .table .trow {
+    grid-template-columns: 82px 1fr 74px;
+    gap: var(--space-2);
+    font-size: 0.75rem;
+    padding: 8px 0 4px;
   }
 
-  /* ✅ FIX: ซ่อนคอลัมน์ "ประเภท" (nth-child 3) บน mobile */
+  /* ✅ ซ่อน header "ประเภท" และ "สถานะ" */
   .table .thead div:nth-child(3),
+  .table .thead div:nth-child(5) {
+    display: none;
+  }
+
+  /* ✅ ซ่อน "ประเภท" ใน trow */
   .table .trow div:nth-child(3) {
     display: none;
   }
 
-  /* ✅ FIX: ปุ่มเล็กลงบน mobile */
-  .btn, .btn-delete {
-    font-size: 0.72rem;
-    padding: 5px 8px;
-  }
-
-  /* ✅ FIX: action-group แนวนอนบน mobile */
-  .action-group {
+  /* ✅ action-group span เต็มแถว อยู่ใต้ข้อมูล */
+  .table .trow .action-group {
+    grid-column: 1 / -1;
     flex-direction: row;
     align-items: center;
-    gap: 6px;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 4px 0 8px;
     flex-wrap: nowrap;
+  }
+
+  .status-badge { flex-shrink: 0; }
+
+  /* ✅ ปุ่มขนาดพอดีมือถือ */
+  .btn,
+  .btn-delete {
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    white-space: nowrap;
   }
 }
 
@@ -396,20 +465,15 @@
   .summary-grid { grid-template-columns: 1fr; }
   .chart { grid-template-columns: repeat(3, 1fr); }
   .tab-row { gap: 6px; }
-
   .card-container { flex-direction: column !important; }
   .card-box-1, .card-box-2 { max-width: 100% !important; width: 100%; }
   .installment-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 360px) {
-  /* ✅ FIX: ซ่อนคอลัมน์วันที่ด้วย เหลือแค่ รายการ + จำนวน + action */
-  .table .thead, .table .trow {
-    grid-template-columns: 1fr 60px auto;
+  .table .thead,
+  .table .trow {
+    grid-template-columns: 70px 1fr 64px;
     font-size: 0.68rem;
   }
-  .table .thead div:nth-child(1),
-  .table .trow div:nth-child(1),
-  .table .thead div:nth-child(3),
-  .table .trow div:nth-child(3) { display: none; }
 }
