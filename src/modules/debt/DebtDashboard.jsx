@@ -348,7 +348,7 @@ export default function DebtDashboard() {
   // ---------- UI ----------
   return (
     <div className="debt-page">
-      <h2 className="page-title">หนี้ & บิล</h2>
+      <h2 className="page-title">Debt & Bills</h2>
 
       {/* Summary */}
       <div className="card-box">

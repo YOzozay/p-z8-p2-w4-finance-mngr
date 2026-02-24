@@ -200,7 +200,7 @@ const fetchOt = async () => {
   return (
     <div className="ot-page">
       <div className="ot-header">
-        <h2>OT & รายได้</h2>
+        <h2>OT + Salary</h2>
         <button className="btn-ghost" onClick={() => setShowSettings(!showSettings)}>
           ⚙️ {showSettings ? "ปิดตั้งค่า" : "ตั้งค่า"}
         </button>
@@ -250,7 +250,7 @@ const fetchOt = async () => {
         <div className="card">
           <div className="card-label">สะสม OT รอบนี้</div>
           <div className="card-value">
-            {otSummary.totalHrs.toFixed(1)} ชม.
+            {otSummary.totalHrs.toFixed(1)} hour.
           </div>
           
           {/* 3. ส่วนแสดง ชม. แยกประเภท x1, x1.5, x3 */}
@@ -269,7 +269,7 @@ const fetchOt = async () => {
 
       <div className="main-grid">
         <form className="form-card" onSubmit={handleAddOt}>
-          <h3>บันทึกสถานะรายวัน</h3>
+           <h3>บันทึก OT</h3>
           <input
             type="date"
             value={otForm.date}
@@ -318,8 +318,8 @@ const fetchOt = async () => {
 
         <div className="history-card">
           <div className="history-header">
-            <h3>ประวัติ (รอบปัจจุบัน 21-20)</h3>
-            <span>สวัสดิการรอบนี้: ฿{otSummary.allowance.toLocaleString()}</span>
+            <h3>รอบปัจจุบัน 21-20</h3>
+            <span>รายได้ OT/รอบ : ฿{otSummary.allowance.toLocaleString()}</span>
           </div>
           <div className="history-list">
             {otSummary.currentCycleData.length > 0 ? (

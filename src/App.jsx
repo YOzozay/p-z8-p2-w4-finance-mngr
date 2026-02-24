@@ -6,9 +6,9 @@ import CarDashboard from "./modules/car/CarDashboard.jsx";
 import { API_URL } from "./config/api";
 
 const TABS = [
-  { id: "car",  icon: "🚗", label: "งวดรถ" },
-  { id: "ot",   icon: "⏱️", label: "OT & รายได้" },
-  { id: "debt", icon: "💳", label: "หนี้ & บิล" },
+  { id: "car",  icon: "🚗", label: "Car payments" },
+  { id: "ot",   icon: "⏱️", label: "OT + Salary" },
+  { id: "debt", icon: "💳", label: "Debt & Bills" },
 ];
 
 // ---- prefetch ทุก module แล้วเก็บ cache ----

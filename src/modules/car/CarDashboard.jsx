@@ -78,9 +78,9 @@ const fetchCar = async () => {
   return (
     <div className="car-root">
       <div className="car-header">
-        <h2 className="car-title">งวดรถ</h2>
+        <h2 className="car-title">Car payments</h2>
         <button className="car-refresh" onClick={fetchCar}>
-          🔄 รีเฟรช
+          🔄 Refresh
         </button>
       </div>
 

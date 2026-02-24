@@ -163,12 +163,19 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* แก้เป็น — เพิ่ม display flex + gap ให้ form-card */
+.form-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);  /* ← เพิ่มช่องว่างระหว่างทุก element */
+}
+
 .form-card h3,
 .history-header h3 {
   font-size: 0.95rem;
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: var(--space-3);
+  margin-bottom: 0; /* ← เอา margin ออก เพราะใช้ gap แทน */
 }
 
 /* ── Toggle (day/holiday) ── */

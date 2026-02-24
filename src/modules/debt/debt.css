@@ -343,6 +343,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+  display: flex;
+  justify-content: center;
+  text-align: center;
 }
 
 /* ── Action Group ── */
