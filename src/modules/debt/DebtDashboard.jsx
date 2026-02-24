@@ -55,7 +55,7 @@ export default function DebtDashboard() {
   const [selectedCardId, setSelectedCardId] = useState("");
   const [itemName, setItemName] = useState("");
   const [isInstallment, setIsInstallment] = useState(false);
-  const [installCardId, setInstallCardId] = useState(""); // บัตรที่ใช้ผ่อน  ← แก้แล้ว
+  const [installCardId, setInstallCardId] = useState("");
   const [amount, setAmount] = useState("");
   const [perMonth, setPerMonth] = useState("");
   const [months, setMonths] = useState("");
@@ -70,24 +70,32 @@ export default function DebtDashboard() {
 
   // ---- load ----
   async function loadCards() {
+    const cached = localStorage.getItem("cache_cards");
+    if (cached) setCards(JSON.parse(cached));
+
     try {
       const res = await fetch(`${API_URL}?mode=cards`);
       const data = await res.json();
       setCards(Array.isArray(data) ? data : []);
+      localStorage.setItem("cache_cards", JSON.stringify(data));
     } catch (e) {
       console.error("loadCards error", e);
-      alert("โหลดข้อมูลบัตรไม่สำเร็จ กรุณารีเฟรชหน้า");
+      if (!cached) alert("โหลดข้อมูลบัตรไม่สำเร็จ กรุณารีเฟรชหน้า");
     }
   }
 
   async function loadDebts() {
+    const cached = localStorage.getItem("cache_debt");
+    if (cached) setDebts(JSON.parse(cached));
+
     try {
       const res = await fetch(`${API_URL}?mode=debt`);
       const data = await res.json();
       setDebts(Array.isArray(data) ? data : []);
+      localStorage.setItem("cache_debt", JSON.stringify(data));
     } catch (e) {
       console.error("loadDebts error", e);
-      alert("โหลดข้อมูลหนี้ไม่สำเร็จ กรุณารีเฟรชหน้า");
+      if (!cached) alert("โหลดข้อมูลหนี้ไม่สำเร็จ กรุณารีเฟรชหน้า");
     }
   }
 
@@ -218,7 +226,7 @@ export default function DebtDashboard() {
           type: "add_installment_plan",
           startDate: date,
           name: itemName.trim(),
-          category: installCardId, // ← เก็บ cardId ไว้ใน category
+          category: installCardId,
           perMonth: Number(perMonth),
           months: Number(months),
         }),
@@ -248,7 +256,6 @@ export default function DebtDashboard() {
     return Object.values(map);
   }, [debts]);
 
-  // ยอดผ่อนต่อเดือนรวมทุกแผนที่ยังไม่ครบ
   const installmentMonthlyTotal = useMemo(() => {
     return installmentPlans.reduce((sum, plan) => {
       const hasUnpaid = plan.some((r) => r[6] !== "yes");
@@ -445,7 +452,7 @@ export default function DebtDashboard() {
                 <option value="credit">บัตรเครดิต</option>
               </select>
 
-              {sourceType === "credit" && (
+              {sourceType === "credit" && !isInstallment && (
                 <select value={selectedCardId} onChange={(e) => setSelectedCardId(e.target.value)}>
                   <option value="">-- เลือกบัตร --</option>
                   {cards.map((c) => (
@@ -636,11 +643,11 @@ export default function DebtDashboard() {
                   <div className="trow" key={i}>
                     <div>{showDate(r[1])}</div>
                     <div>{r[3]}</div>
-                      <div>  {/* ← เพิ่ม */}
-                        {r[2] === "credit"
-                          ? <span className="badge" style={{background:"#dbeafe",color:"#1d4ed8"}}>💳 บัตรเครดิต</span>
-                          : <span className="badge" style={{background:"#f0fdf4",color:"#15803d"}}>🧾 บิล</span>
-                        }
+                    <div>
+                      {r[2] === "credit"
+                        ? <span className="badge" style={{background:"#dbeafe",color:"#1d4ed8"}}>💳 บัตรเครดิต</span>
+                        : <span className="badge" style={{background:"#f0fdf4",color:"#15803d"}}>🧾 บิล</span>
+                      }
                     </div>
                     <div>{currency(r[5])}</div>
                     <div className="action-group">

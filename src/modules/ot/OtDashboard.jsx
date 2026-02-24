@@ -36,18 +36,22 @@ export default function OtDashboard() {
     dayType: "work",
   });
 
-  const fetchOt = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}?mode=ot`);
-      const json = await res.json();
-      setData(Array.isArray(json) ? json : []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchOt = async () => {
+  const cached = localStorage.getItem("cache_ot");
+  if (cached) setData(JSON.parse(cached));
+
+  if (!cached) setLoading(true); // ← แก้: หมุนเฉพาะตอนไม่มี cache
+  try {
+    const res = await fetch(`${API_URL}?mode=ot`);
+    const json = await res.json();
+    setData(Array.isArray(json) ? json : []);
+    localStorage.setItem("cache_ot", JSON.stringify(json));
+  } catch (e) {
+    console.error(e);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchOt();
@@ -174,7 +178,7 @@ export default function OtDashboard() {
     try {
       await fetch(API_URL, {
         method: "POST",
-       /*ode: "no-cors",*/
+        mode: "no-cors",
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({ type: "delete_ot", rowIndex }),
       });

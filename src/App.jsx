@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
-
 import OtDashboard from "./modules/ot/OtDashboard.jsx";
 import DebtDashboard from "./modules/debt/DebtDashboard.jsx";
 import CarDashboard from "./modules/car/CarDashboard.jsx";
+import { API_URL } from "./config/api";
 
 const TABS = [
   { id: "car",  icon: "🚗", label: "งวดรถ" },
@@ -11,9 +11,40 @@ const TABS = [
   { id: "debt", icon: "💳", label: "หนี้ & บิล" },
 ];
 
+// ---- prefetch ทุก module แล้วเก็บ cache ----
+function prefetchAll() {
+  const modes = ["debt", "ot", "car", "cards"];
+  modes.forEach(mode => {
+    fetch(`${API_URL}?mode=${mode}`)
+      .then(r => r.json())
+      .then(data => {
+        localStorage.setItem(`cache_${mode}`, JSON.stringify(data));
+      })
+      .catch(() => {});
+  });
+}
+
 export default function App() {
-  const [tab, setTab] = useState("car");
+  // ---- อ่าน tab จาก URL hash (F5 อยู่หน้าเดิม) ----
+  const getInitialTab = () => {
+    const hash = window.location.hash.replace("#", "");
+    return TABS.find(t => t.id === hash) ? hash : "car";
+  };
+
+  const [tab, setTab] = useState(getInitialTab);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // ---- prefetch ตอนเปิดแอป ----
+  useEffect(() => {
+    prefetchAll();
+  }, []);
+
+  // ---- sync tab กับ URL hash ----
+  const handleNav = (id, onNav) => {
+    setTab(id);
+    window.location.hash = id;
+    onNav?.();
+  };
 
   const SidebarContent = ({ onNav }) => (
     <>
@@ -24,7 +55,7 @@ export default function App() {
         <button
           key={t.id}
           className={`nav-btn${tab === t.id ? " active" : ""}`}
-          onClick={() => { setTab(t.id); onNav?.(); }}
+          onClick={() => handleNav(t.id, onNav)}
         >
           <span>{t.icon}</span> {t.label}
         </button>

@@ -7,18 +7,22 @@ export default function CarDashboard() {
   const [rows, setRows] = useState([]);
 
   // ดึงข้อมูล CarLoan
-  const fetchCar = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}?mode=car`);
-      const json = await res.json();
-      setRows(Array.isArray(json) ? json : []);
-    } catch (e) {
-      console.error("fetch car error", e);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchCar = async () => {
+  const cached = localStorage.getItem("cache_car");
+  if (cached) setRows(JSON.parse(cached));
+
+  if (!cached) setLoading(true); // ← แก้: หมุนเฉพาะตอนไม่มี cache
+  try {
+    const res = await fetch(`${API_URL}?mode=car`);
+    const json = await res.json();
+    setRows(Array.isArray(json) ? json : []);
+    localStorage.setItem("cache_car", JSON.stringify(json));
+  } catch (e) {
+    console.error("fetch car error", e);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchCar();
