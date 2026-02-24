@@ -84,10 +84,18 @@ export default function OtDashboard() {
     data.forEach((row) => {
       const rawDate = new Date(row[0]);
       const rowDateInt = toInt(new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate()));
-      const foodNormal = Number(row[6]) || 0;
-      const gas = Number(row[8]) || 0;
-      const isOt15or3 = (Number(row[2]) || 0) > 0 || (Number(row[3]) || 0) > 0;
-      const foodOt = isOt15or3 ? (Number(row[7]) || 0) : 0;
+      
+      // ✅ แก้ Bug #2: ถ้าเป็นวันหยุด (dayType === "holiday") ไม่นำ food และ gas
+      const dayType = row[10]; // dayType อยู่ column 10
+      const foodNormal = dayType === "holiday" ? 0 : (Number(row[6]) || 0);
+      const gas = dayType === "holiday" ? 0 : (Number(row[8]) || 0);
+      
+      // ✅ แก้ Bug #1: OT 1.5 ต้อง >= 2 ชั่วโมง ถึงจะนับค่าข้าวOT
+      const ot15 = Number(row[2]) || 0;
+      const ot3 = Number(row[3]) || 0;
+      const hasOt15or3 = (ot15 >= 2) || ot3 > 0; // เปลี่ยนจาก > เป็น >=
+      const foodOt = hasOt15or3 ? (Number(row[7]) || 0) : 0;
+      
       const dailyTotalAllowance = foodNormal + foodOt + gas;
       if (rowDateInt >= startInt && rowDateInt <= endInt) {
         allowanceCurrentCycle += dailyTotalAllowance;
@@ -121,6 +129,7 @@ export default function OtDashboard() {
       otPay +
       allowanceCurrentCycle;
 
+    // ✅ แก้ Bug #3: เรียงลำดับจากเก่า → ใหม่ ให้วันล่าสุดอยู่แถวล่าง
     return {
       totalHrs: totalHrsCurrentCycle,
       hrsX1,
@@ -129,7 +138,7 @@ export default function OtDashboard() {
       otPay,
       netSalary,
       allowance: allowanceCurrentCycle,
-      currentCycleData: currentCycleRows.reverse(),
+      currentCycleData: currentCycleRows.reverse(), // reverse เพื่อให้ล่าสุดอยู่ล่าง
     };
   }, [data, config]);
 
@@ -171,15 +180,15 @@ export default function OtDashboard() {
     }
   };
 
-  const handleDeleteOt = async (rowIndex) => {
+  const handleDeleteOt = async (date, ot1) => {
     if (!confirm("ยืนยันการลบรายการนี้?")) return;
     setLoading(true);
     try {
-      // ✅ แก้: ลบ mode: "no-cors" ออก
+      // ✅ แก้: ส่ง date และ ot1 ไปเพื่อค้นหา row ที่ถูกต้อง
       await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({ type: "delete_ot", rowIndex }),
+        body: JSON.stringify({ type: "delete_ot", date, ot1 }),
       });
       await fetchOt(); // ✅ แก้: ใช้ await แทน setTimeout
     } catch (e) {
@@ -193,7 +202,13 @@ export default function OtDashboard() {
     if (Number(row[1]) > 0) parts.push(`x1.0: ${row[1]}`);
     if (Number(row[2]) > 0) parts.push(`x1.5: ${row[2]}`);
     if (Number(row[3]) > 0) parts.push(`x3.0: ${row[3]}`);
-    return parts.length > 0 ? parts.join(" | ") : row[6] > 0 ? "มาทำงาน" : "วันหยุด/ลา";
+    
+    // ✅ แก้: ตรวจสอบ dayType แทนการดูค่า food
+    const dayType = row[10];
+    if (dayType === "holiday") {
+      return "วันหยุด/ลา";
+    }
+    return parts.length > 0 ? parts.join(" | ") : "มาทำงาน";
   };
 
   return (
@@ -328,19 +343,28 @@ export default function OtDashboard() {
                     <div className="money">
                       ฿
                       {(() => {
-                        const isOt15or3 = (Number(row[2]) || 0) > 0 || (Number(row[3]) || 0) > 0;
+                        // ✅ แก้ Bug #1 & #2: ตรวจสอบ dayType และ OT1.5 >= 2
+                        const dayType = row[10];
+                        const foodNormal = dayType === "holiday" ? 0 : (Number(row[6]) || 0);
+                        const gas = dayType === "holiday" ? 0 : (Number(row[8]) || 0);
+                        
+                        const ot15 = Number(row[2]) || 0;
+                        const ot3 = Number(row[3]) || 0;
+                        const hasOt15or3 = (ot15 >= 2) || ot3 > 0;
+                        const foodOt = hasOt15or3 ? (Number(row[7]) || 0) : 0;
+                        
                         return (
                           ((Number(row[1]) || 0) +
                             Number(row[2]) * 1.5 +
                             Number(row[3]) * 3) *
                             config.otRate +
-                          (Number(row[6]) || 0) +
-                          (isOt15or3 ? (Number(row[7]) || 0) : 0) +
-                          (Number(row[8]) || 0)
+                          foodNormal +
+                          foodOt +
+                          gas
                         ).toLocaleString();
                       })()}
                     </div>
-                    <button className="btn-delete" onClick={() => handleDeleteOt(row[10])}>
+                    <button className="btn-delete" onClick={() => handleDeleteOt(row[0], row[1])}>
                       🗑️
                     </button>
                   </div>

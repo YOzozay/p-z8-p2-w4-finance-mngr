@@ -65,6 +65,17 @@ export default function DebtDashboard() {
   const months6 = useMemo(() => lastNMonths(6), []);
   const [filterMonth, setFilterMonth] = useState(ym(todayISO()));
   const [filterStatus, setFilterStatus] = useState("all");
+  // ✅ เพิ่ม: state สำหรับฟิลเตอร์เดือนถัดไป
+  const [showNextMonth, setShowNextMonth] = useState(false);
+
+  // ✅ เพิ่ม: function คำนวณเดือนถัดไป
+  const getNextMonthDate = () => {
+    const now = new Date();
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const y = nextMonth.getFullYear();
+    const m = String(nextMonth.getMonth() + 1).padStart(2, "0");
+    return `${y}-${m}`;
+  };
 
   // ---- load ----
   async function loadCards() {
@@ -145,15 +156,18 @@ export default function DebtDashboard() {
     const targets = debts.filter(
       (r) => r[2] !== "installment" && ym(r[1]) === filterMonth && r[6] !== "yes"
     );
-    // ✅ แก้: ใช้ Promise.all แทน sequential loop
-    await Promise.all(
-      targets.map((r) =>
-        fetch(API_URL, {
+    // ✅ แก้: ทำทีละรายการ รอให้เสร็จ
+    for (const r of targets) {
+      try {
+        await fetch(API_URL, {
           method: "POST",
           body: JSON.stringify({ type: "toggle_debt_paid", id: r[0] }),
-        })
-      )
-    );
+        });
+        await new Promise(resolve => setTimeout(resolve, 50));
+      } catch (e) {
+        console.error("Toggle error:", e);
+      }
+    }
     await loadDebts();
   }
 
@@ -266,28 +280,41 @@ export default function DebtDashboard() {
 
   const maxChart = Math.max(1, ...chartData.map((d) => d.v));
 
+  // ✅ แก้: filteredRows - เพิ่มตรวจสอบ showNextMonth
   const filteredRows = useMemo(() => {
-    return debts
-      .filter((r) => r[2] !== "installment")
-      .filter((r) => (filterMonth ? ym(r[1]) === filterMonth : true))
-      .filter((r) => {
-        if (filterStatus === "paid") return r[6] === "yes";
-        if (filterStatus === "unpaid") return r[6] !== "yes";
-        return true;
-      });
-  }, [debts, filterMonth, filterStatus]);
+    let res = debts.filter((r) => r[2] !== "installment");
+
+    if (showNextMonth) {
+      const nextMonthYM = getNextMonthDate();
+      res = res.filter((r) => ym(r[1]) === nextMonthYM);
+    } else {
+      res = res.filter((r) => ym(r[1]) === filterMonth);
+    }
+
+    res = res.filter((r) => {
+      if (filterStatus === "paid") return r[6] === "yes";
+      if (filterStatus === "unpaid") return r[6] !== "yes";
+      return true;
+    });
+
+    return res;
+  }, [debts, filterMonth, filterStatus, showNextMonth]);
 
   async function deletePlan(plan) {
     if (!window.confirm("ลบทั้งแผนผ่อนนี้? (จะลบทุกงวด)")) return;
-    // ✅ แก้: ใช้ Promise.all แทน sequential loop
-    await Promise.all(
-      plan.map((r) =>
-        fetch(API_URL, {
+    // ✅ แก้: ลบทีละงวด แล้วรอให้เสร็จ เพื่อหลีกเลี่ยง race condition
+    for (const r of plan) {
+      try {
+        await fetch(API_URL, {
           method: "POST",
           body: JSON.stringify({ type: "delete_debt", id: r[0] }),
-        })
-      )
-    );
+        });
+        // เล็กน้อยของเวลาเพื่อให้ delete เสร็จ
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (e) {
+        console.error("Delete error:", e);
+      }
+    }
     setOpenPlanId(null);
     await loadDebts();
   }
@@ -525,9 +552,34 @@ export default function DebtDashboard() {
             <div className="card-box-2">
               <h3>รายการทั้งหมด</h3>
               <div className="filter-row">
-                <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)}>
-                  {months6.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
+                {/* ✅ เพิ่ม: ตัวเลือกสำหรับเดือนถัดไป */}
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                  <select 
+                    value={filterMonth} 
+                    onChange={(e) => {
+                      setFilterMonth(e.target.value);
+                      setShowNextMonth(false);
+                    }}
+                    disabled={showNextMonth}
+                  >
+                    {months6.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                  <button 
+                    className={`btn-month ${showNextMonth ? 'active' : ''}`}
+                    onClick={() => setShowNextMonth(!showNextMonth)}
+                    style={{
+                      padding: "6px 12px",
+                      background: showNextMonth ? "var(--accent)" : "#e0e7ff",
+                      color: showNextMonth ? "white" : "var(--text-primary)",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontWeight: "500"
+                    }}
+                  >
+                    📅 เดือนถัดไป
+                  </button>
+                </div>
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                   <option value="all">ทั้งหมด</option>
                   <option value="paid">จ่ายแล้ว</option>
