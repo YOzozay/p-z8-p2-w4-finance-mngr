@@ -1,5 +1,5 @@
 /* ============================================================
-   DEBT.CSS — Debt & Bills Tracker
+   DEBT.CSS — Debt & Bills Tracker (Fully Responsive)
    ============================================================ */
 
 .debt-page {
@@ -11,6 +11,7 @@
   flex-direction: column;
   gap: var(--space-5);
   font-family: var(--font-sans);
+  box-sizing: border-box;
 }
 
 /* ── Card Box ── */
@@ -26,27 +27,28 @@
 }
 .card-box:hover { box-shadow: var(--shadow-md); }
 
-/* ── Card Container (2-col side by side) ── */
+/* ── Card Container — fluid wrap ── */
 .card-container {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-5);
   width: 100%;
   align-items: flex-start;
-  justify-content: flex-start;
 }
 .card-box-1 {
-  flex: 0 0 520px;
+  flex: 1 1 280px;
+  min-width: 0;
   max-width: 520px;
 }
 .card-box-2 {
-  flex: 1;
+  flex: 2 1 360px;
   min-width: 0;
 }
 
-/* ── Summary Grid (3 stats) ── */
+/* ── Summary Grid ── */
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: var(--space-3);
 }
 .sum-card {
@@ -79,13 +81,13 @@
   transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
 }
 
-/* ── Chart / Bar ── */
+/* ── Chart ── */
 .chart {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: var(--space-2);
   align-items: end;
-  height: 160px;
+  height: clamp(80px, 15vw, 160px);
 }
 .bar-col {
   display: flex;
@@ -102,10 +104,11 @@
 }
 .bar:hover { opacity: 1; }
 .bar-label {
-  font-size: 0.68rem;
+  font-size: clamp(0.5rem, 1.2vw, 0.68rem);
   color: var(--text-muted);
   font-family: var(--font-mono);
   text-align: center;
+  word-break: break-all;
 }
 
 /* ── Tabs ── */
@@ -125,9 +128,8 @@
   font-weight: 600;
   color: var(--text-secondary);
   transition: all var(--ease);
-  transform: none;
 }
-.tab:hover { border-color: var(--accent); color: var(--accent); transform: none; opacity: 1; }
+.tab:hover { border-color: var(--accent); color: var(--accent); }
 .tab.active {
   background: var(--accent);
   color: #fff;
@@ -138,13 +140,13 @@
 /* ── Forms ── */
 .form-row, .filter-row {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: var(--space-2);
   margin-bottom: var(--space-4);
 }
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--space-2);
 }
 
@@ -167,47 +169,38 @@
   background: var(--danger-soft);
   color: var(--danger);
   border: 1px solid rgba(220,38,38,0.2);
-  padding: 6px 10px;
+  padding: 5px 10px;
   border-radius: var(--radius-sm);
-  font-size: 0.78rem;
+  font-size: clamp(0.68rem, 1.4vw, 0.78rem);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--ease);
-  min-width: 40px;
-  white-space: nowrap; /* ✅ FIX: ไม่ให้ตัดบรรทัด */
+  white-space: nowrap;
 }
-.btn-delete:hover { background: var(--danger); color: #fff; transform: none; opacity: 1; }
+.btn-delete:hover { background: var(--danger); color: #fff; }
 
 .btn {
   background: var(--bg-muted);
   border: 1px solid var(--border);
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: var(--radius-sm);
-  font-size: 0.78rem;
+  font-size: clamp(0.68rem, 1.4vw, 0.78rem);
   font-weight: 600;
   color: var(--text-primary);
   cursor: pointer;
   transition: all var(--ease);
-  min-width: 40px;
-  white-space: nowrap; /* ✅ FIX: ไม่ให้ตัดบรรทัด */
+  white-space: nowrap;
 }
-.btn:hover { background: var(--bg-subtle); transform: none; opacity: 1; }
-.btn.primary {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
+.btn:hover { background: var(--bg-subtle); }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 .btn.primary:hover { background: var(--accent-hover); }
-.btn.danger {
-  background: var(--danger);
-  color: #fff;
-  border-color: var(--danger);
-}
+.btn.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
 
 /* ── Card List ── */
 .card-list .card-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: var(--space-2);
   border-bottom: 1px solid var(--border);
   font-size: 0.85rem;
@@ -220,10 +213,9 @@
 /* ── Installment Grid ── */
 .installment-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: var(--space-3);
 }
-
 .install-card {
   background: var(--bg-subtle);
   border: 1px solid var(--border);
@@ -237,7 +229,6 @@
   box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }
-
 .install-card .bar {
   height: 7px;
   background: var(--bg-muted);
@@ -259,20 +250,19 @@
 
 /* ── Slide Panel ── */
 .install-wrap { display: flex; flex-direction: column; gap: 6px; }
-
 .slide-panel {
   overflow: hidden;
   max-height: 0;
   transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
 }
 .slide-panel.open { max-height: 900px; }
-
 .slide-inner {
   background: var(--bg-surface);
   border-radius: var(--radius-md);
   padding: var(--space-2);
   border: 1px solid var(--border);
   margin-top: var(--space-2);
+  overflow-x: auto;
 }
 
 /* ── Install Row ── */
@@ -282,7 +272,7 @@
   gap: 5px;
   padding: 7px 0;
   border-bottom: 1px solid var(--border);
-  font-size: 0.78rem;
+  font-size: clamp(0.68rem, 1.4vw, 0.78rem);
   color: var(--text-primary);
   align-items: center;
 }
@@ -292,22 +282,31 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 10px;
+  gap: 3px;
+  padding: 2px 8px;
   border-radius: var(--radius-full);
-  font-size: 0.7rem;
+  font-size: clamp(0.6rem, 1.2vw, 0.7rem);
   font-weight: 700;
+  white-space: nowrap;
 }
 .badge.ok   { background: var(--success-soft); color: var(--success); }
 .badge.wait { background: var(--warning-soft); color: var(--warning); }
 
 /* ── Table ── */
-.table .thead, .table .trow {
+.table { width: 100%; overflow-x: auto; }
+.table .thead,
+.table .trow {
   display: grid;
-  grid-template-columns: 80px 1fr 105px 75px 150px;
-  gap: var(--space-3);
+  grid-template-columns:
+    minmax(72px, 0.9fr)
+    minmax(90px, 1.8fr)
+    minmax(80px, 1fr)
+    minmax(65px, 0.8fr)
+    minmax(130px, 1.3fr);
+  gap: clamp(4px, 1vw, 10px);
   align-items: center;
   padding: 6px 0;
-  font-size: 0.8rem;
+  font-size: clamp(0.68rem, 1.4vw, 0.8rem);
 }
 .table .thead {
   font-weight: 700;
@@ -315,7 +314,7 @@
   border-bottom: 2px solid var(--border);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-size: 0.7rem;
+  font-size: clamp(0.58rem, 1.1vw, 0.7rem);
   padding-bottom: var(--space-2);
 }
 .table .trow {
@@ -326,28 +325,24 @@
 .table .trow:hover { background: var(--bg-subtle); border-radius: var(--radius-sm); }
 .table .trow:last-child { border-bottom: none; }
 
-.table .trow div:nth-child(2) {
-  text-align: left;
-  line-height: 1.4;
-  /* ✅ FIX: ป้องกันข้อความตกแนวตั้ง */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-/* ✅ thead ทุก column อยู่กลาง */
 .table .thead div {
   display: flex;
   justify-content: center;
   text-align: center;
 }
-
 .table .trow div:nth-child(1),
-.table .trow div:nth-child(3) {
+.table .trow div:nth-child(3),
+.table .trow div:nth-child(4) {
   display: flex;
   justify-content: center;
   text-align: center;
   white-space: nowrap;
+}
+.table .trow div:nth-child(2) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 /* ── Action Group ── */
@@ -360,120 +355,53 @@
 .button-group {
   display: flex;
   gap: var(--space-1);
-  flex-wrap: nowrap; /* ✅ FIX: ไม่ให้ปุ่มตกบรรทัด */
+  flex-wrap: nowrap;
 }
 
-/* ── Tablet Landscape (Sidebar + 2-col layout) ── */
-@media (min-width: 769px) and (max-width: 1200px) {
-  /* ลด card-box-1 ให้แคบลง เพื่อให้ card-box-2 มีพื้นที่มากขึ้น */
-  .card-box-1 {
-    flex: 0 0 280px;
-    max-width: 280px;
-  }
+/* ── Stack layout when container too narrow ── */
+@media (max-width: 680px) {
+  .debt-page { padding: var(--space-3); }
 
-  /* ปรับ columns ของตารางให้พอดีกับพื้นที่ที่แคบลง */
-  .table .thead, .table .trow {
-    grid-template-columns: 80px 1fr 90px 65px 130px;
-    gap: var(--space-2);
-    font-size: 0.75rem;
-  }
-
-  /* action-group แนวนอนบน tablet */
-  .action-group {
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;
-    flex-wrap: nowrap;
-  }
-
-  .btn, .btn-delete {
-    font-size: 0.72rem;
-    padding: 4px 8px;
-    white-space: nowrap;
-  }
-}
-
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .debt-page { padding: var(--space-4); }
-
-  /* ✅ FIX: stack installment แล้วตามด้วย รายการทั้งหมด */
-  .card-container {
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-  .card-box-1,
-  .card-box-2 {
+  .card-container { flex-direction: column; }
+  .card-box-1, .card-box-2 {
     flex: unset;
     max-width: 100%;
     width: 100%;
   }
 
-  .summary-grid { grid-template-columns: repeat(2, 1fr); }
   .form-grid { grid-template-columns: 1fr; }
   .installment-grid { grid-template-columns: 1fr; }
   .install-row { grid-template-columns: repeat(2, 1fr); }
+  .chart { grid-template-columns: repeat(3, 1fr); }
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
 
-  /* ✅ FIX: ตาราง 3 คอลัมน์ วันที่ | รายการ | จำนวนเงิน */
-  .table .thead {
-    grid-template-columns: 82px 1fr 74px;
-    gap: var(--space-2);
-    font-size: 0.7rem;
-  }
-  .table .trow {
-    grid-template-columns: 82px 1fr 74px;
-    gap: var(--space-2);
-    font-size: 0.75rem;
-    padding: 8px 0 4px;
-  }
-
-  /* ✅ ซ่อน header "ประเภท" และ "สถานะ" */
+  /* ซ่อนคอลัมน์ ประเภท และ สถานะ ใน header */
   .table .thead div:nth-child(3),
-  .table .thead div:nth-child(5) {
-    display: none;
+  .table .thead div:nth-child(5) { display: none; }
+  .table .trow div:nth-child(3) { display: none; }
+
+  .table .thead,
+  .table .trow {
+    grid-template-columns:
+      minmax(65px, 0.8fr)
+      minmax(80px, 1.5fr)
+      minmax(60px, 0.7fr)
+      minmax(110px, 1fr);
   }
 
-  /* ✅ ซ่อน "ประเภท" ใน trow */
-  .table .trow div:nth-child(3) {
-    display: none;
-  }
-
-  /* ✅ action-group span เต็มแถว อยู่ใต้ข้อมูล */
   .table .trow .action-group {
     grid-column: 1 / -1;
     flex-direction: row;
-    align-items: center;
     justify-content: flex-end;
-    gap: 8px;
     padding: 4px 0 8px;
-    flex-wrap: nowrap;
-  }
-
-  .status-badge { flex-shrink: 0; }
-
-  /* ✅ ปุ่มขนาดพอดีมือถือ */
-  .btn,
-  .btn-delete {
-    font-size: 0.75rem;
-    padding: 5px 10px;
-    white-space: nowrap;
   }
 }
 
-@media (max-width: 480px) {
-  .card-box { padding: var(--space-4); }
+@media (max-width: 380px) {
   .summary-grid { grid-template-columns: 1fr; }
-  .chart { grid-template-columns: repeat(3, 1fr); }
-  .tab-row { gap: 6px; }
-  .card-container { flex-direction: column !important; }
-  .card-box-1, .card-box-2 { max-width: 100% !important; width: 100%; }
-  .installment-grid { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 360px) {
   .table .thead,
   .table .trow {
-    grid-template-columns: 70px 1fr 64px;
-    font-size: 0.68rem;
+    grid-template-columns: 60px 1fr 55px auto;
+    font-size: 0.65rem;
   }
 }

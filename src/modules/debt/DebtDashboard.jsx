@@ -8,7 +8,8 @@ function currency(n) {
   return "฿" + num.toLocaleString("th-TH");
 }
 function showDate(d) {
-  return d || "";
+  if (!d) return "";
+  return d.replace(/-/g, "/");
 }
 function ym(d) {
   if (!d) return "";
