@@ -305,7 +305,7 @@ export default function DebtDashboard() {
 
   return (
     <div className="debt-page">
-      <h2 className="page-title">หนี้ & บิล</h2>
+      <h2 className="page-title">Debt & Bills</h2>
 
       <div className="card-box">
         <h3>สรุปเดือน {currentYM}</h3>
@@ -401,6 +401,18 @@ export default function DebtDashboard() {
               {sourceType === "credit" && !isInstallment && (
                 <select value={selectedCardId} onChange={(e) => setSelectedCardId(e.target.value)}>
                   <option value="">-- เลือกบัตร --</option>
+                  {cards.map((c) => (
+                    <option key={c.cardId} value={c.cardId}>
+                      {c.name} (ตัดรอบ {c.cutOffDay})
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {/* ✅ เพิ่ม: แสดงบัตรเมื่อเลือก credit + ผ่อน */}
+              {sourceType === "credit" && isInstallment && (
+                <select value={installCardId} onChange={(e) => setInstallCardId(e.target.value)}>
+                  <option value="">-- เลือกบัตรที่ผ่อน --</option>
                   {cards.map((c) => (
                     <option key={c.cardId} value={c.cardId}>
                       {c.name} (ตัดรอบ {c.cutOffDay})

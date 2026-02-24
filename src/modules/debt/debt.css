@@ -27,22 +27,21 @@
 }
 .card-box:hover { box-shadow: var(--shadow-md); }
 
-/* ── Card Container — fluid wrap ── */
+/* ── Card Container — CSS Grid (ไม่มีปัญหาทุกขนาด) ── */
 .card-container {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(280px, 420px) 1fr;
   gap: var(--space-5);
   width: 100%;
-  align-items: flex-start;
+  align-items: start;
 }
 .card-box-1 {
-  flex: 1 1 280px;
   min-width: 0;
-  max-width: 520px;
+  width: 100%;
 }
 .card-box-2 {
-  flex: 2 1 360px;
   min-width: 0;
+  width: 100%;
 }
 
 /* ── Summary Grid ── */
@@ -213,7 +212,7 @@
 /* ── Installment Grid ── */
 .installment-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--space-3);
 }
 .install-card {
@@ -247,15 +246,25 @@
   justify-content: space-between;
   align-items: center;
 }
-
 /* ── Slide Panel ── */
-.install-wrap { display: flex; flex-direction: column; gap: 6px; }
+.install-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative; /* ✅ เพิ่ม */
+}
+
 .slide-panel {
   overflow: hidden;
   max-height: 0;
-  transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.slide-panel.open { max-height: 900px; }
+
+.slide-panel.open {
+  max-height: 600px;
+  overflow: visible; /* ✅ ให้ขยายออกได้ */
+}
+
 .slide-inner {
   background: var(--bg-surface);
   border-radius: var(--radius-md);
@@ -263,6 +272,20 @@
   border: 1px solid var(--border);
   margin-top: var(--space-2);
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 560px;
+
+  /* ✅ ยืดขวา */
+  width: calc(100% + 220px);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  z-index: 10;
+}
+
+@media (max-width: 680px) {
+  .slide-inner {
+    width: 100%; /* ✅ มือถือไม่ยืด */
+  }
 }
 
 /* ── Install Row ── */
@@ -361,15 +384,12 @@
   flex-wrap: nowrap;
 }
 
-/* ── Stack layout when container too narrow ── */
+/* ── Mobile: stack ── */
 @media (max-width: 680px) {
   .debt-page { padding: var(--space-3); }
 
-  .card-container { flex-direction: column; }
-  .card-box-1, .card-box-2 {
-    flex: unset;
-    max-width: 100%;
-    width: 100%;
+  .card-container {
+    grid-template-columns: 1fr;
   }
 
   .form-grid { grid-template-columns: 1fr; }
@@ -378,7 +398,6 @@
   .chart { grid-template-columns: repeat(3, 1fr); }
   .summary-grid { grid-template-columns: repeat(2, 1fr); }
 
-  /* ซ่อนคอลัมน์ ประเภท และ สถานะ ใน header */
   .table .thead div:nth-child(3),
   .table .thead div:nth-child(5) { display: none; }
   .table .trow div:nth-child(3) { display: none; }
