@@ -13,7 +13,8 @@ function showDate(d) {
 }
 function ym(d) {
   if (!d) return "";
-  if (d.includes("/")) {
+  // ✅ แก้: เช็ค format DD/MM/YYYY (/ อยู่ตำแหน่ง index <= 2)
+  if (d.includes("/") && d.indexOf("/") <= 2) {
     const parts = d.split("/");
     const y = parts[2];
     const m = String(parts[1]).padStart(2, "0");
@@ -42,17 +43,15 @@ function lastNMonths(n = 6) {
 
 // ---------- component ----------
 export default function DebtDashboard() {
-  const [tab, setTab] = useState("add"); // add | cards
+  const [tab, setTab] = useState("add");
   const [cards, setCards] = useState([]);
   const [debts, setDebts] = useState([]);
 
-  // ----- card form -----
   const [cardName, setCardName] = useState("");
   const [cutOffDay, setCutOffDay] = useState("");
 
-  // ----- add item form -----
   const [date, setDate] = useState(todayISO());
-  const [sourceType, setSourceType] = useState("bill"); // bill | credit
+  const [sourceType, setSourceType] = useState("bill");
   const [selectedCardId, setSelectedCardId] = useState("");
   const [itemName, setItemName] = useState("");
   const [isInstallment, setIsInstallment] = useState(false);
@@ -61,10 +60,8 @@ export default function DebtDashboard() {
   const [perMonth, setPerMonth] = useState("");
   const [months, setMonths] = useState("");
 
-  // ----- expand installment -----
   const [openPlanId, setOpenPlanId] = useState(null);
 
-  // ----- filters -----
   const months6 = useMemo(() => lastNMonths(6), []);
   const [filterMonth, setFilterMonth] = useState(ym(todayISO()));
   const [filterStatus, setFilterStatus] = useState("all");
@@ -73,7 +70,6 @@ export default function DebtDashboard() {
   async function loadCards() {
     const cached = localStorage.getItem("cache_cards");
     if (cached) setCards(JSON.parse(cached));
-
     try {
       const res = await fetch(`${API_URL}?mode=cards`);
       const data = await res.json();
@@ -88,7 +84,6 @@ export default function DebtDashboard() {
   async function loadDebts() {
     const cached = localStorage.getItem("cache_debt");
     if (cached) setDebts(JSON.parse(cached));
-
     try {
       const res = await fetch(`${API_URL}?mode=debt`);
       const data = await res.json();
@@ -110,16 +105,10 @@ export default function DebtDashboard() {
     if (!cardName.trim()) return alert("กรอกชื่อบัตร");
     const d = Number(cutOffDay);
     if (!d || d < 1 || d > 31) return alert("วันตัดรอบต้องอยู่ระหว่าง 1-31");
-
     await fetch(API_URL, {
       method: "POST",
-      body: JSON.stringify({
-        type: "add_card",
-        name: cardName.trim(),
-        cutOffDay: d,
-      }),
+      body: JSON.stringify({ type: "add_card", name: cardName.trim(), cutOffDay: d }),
     });
-
     setCardName("");
     setCutOffDay("");
     await loadCards();
@@ -129,66 +118,50 @@ export default function DebtDashboard() {
     if (!window.confirm("ลบบัตรนี้?")) return;
     await fetch(API_URL, {
       method: "POST",
-      body: JSON.stringify({
-        type: "delete_card",
-        cardId,
-      }),
+      body: JSON.stringify({ type: "delete_card", cardId }),
     });
     await loadCards();
   }
 
-  // ---- actions: delete item ----
   async function deleteDebt(id) {
     if (!window.confirm("ลบรายการนี้?")) return;
     await fetch(API_URL, {
       method: "POST",
-      body: JSON.stringify({
-        type: "delete_debt",
-        id,
-      }),
+      body: JSON.stringify({ type: "delete_debt", id }),
     });
     await loadDebts();
   }
 
-  // ---- actions: toggle paid ----
   async function togglePaid(id) {
     await fetch(API_URL, {
       method: "POST",
-      body: JSON.stringify({
-        type: "toggle_debt_paid",
-        id,
-      }),
+      body: JSON.stringify({ type: "toggle_debt_paid", id }),
     });
     await loadDebts();
   }
 
-  // ---- bulk: pay all this month ----
   async function payAllThisMonth() {
     if (!window.confirm("ต้องการจ่ายทุกรายการของเดือนนี้หรือไม่? (ไม่รวมผ่อน)")) return;
-
     const targets = debts.filter(
       (r) => r[2] !== "installment" && ym(r[1]) === filterMonth && r[6] !== "yes"
     );
-
-    for (const r of targets) {
-      await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          type: "toggle_debt_paid",
-          id: r[0],
-        }),
-      });
-    }
+    // ✅ แก้: ใช้ Promise.all แทน sequential loop
+    await Promise.all(
+      targets.map((r) =>
+        fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ type: "toggle_debt_paid", id: r[0] }),
+        })
+      )
+    );
     await loadDebts();
   }
 
-  // ---- actions: add item ----
   async function addItem() {
     if (!itemName.trim()) return alert("กรอกชื่อรายการ");
 
     if (!isInstallment) {
       if (!amount || Number(amount) <= 0) return alert("กรอกจำนวนเงิน");
-
       if (sourceType === "bill") {
         await fetch(API_URL, {
           method: "POST",
@@ -220,7 +193,6 @@ export default function DebtDashboard() {
     } else {
       if (!perMonth || Number(perMonth) <= 0) return alert("กรอกยอดต่อเดือน");
       if (!months || Number(months) <= 0) return alert("กรอกจำนวนเดือน");
-
       await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({
@@ -243,7 +215,6 @@ export default function DebtDashboard() {
     await loadDebts();
   }
 
-  // ---- computed: installment groups ----
   const installmentPlans = useMemo(() => {
     const map = {};
     debts.forEach((r) => {
@@ -266,22 +237,15 @@ export default function DebtDashboard() {
   }, [installmentPlans]);
 
   const installmentTotalPreview = useMemo(() => {
-    const pm = Number(perMonth || 0);
-    const mo = Number(months || 0);
-    return pm * mo;
+    return Number(perMonth || 0) * Number(months || 0);
   }, [perMonth, months]);
 
-  // ---- summary ----
   const currentYM = filterMonth;
   const monthRows = useMemo(
     () => debts.filter((r) => r[2] !== "installment" && ym(r[1]) === currentYM),
     [debts, currentYM]
   );
-
-  const monthTotal = useMemo(
-    () => monthRows.reduce((s, r) => s + Number(r[5] || 0), 0),
-    [monthRows]
-  );
+  const monthTotal = useMemo(() => monthRows.reduce((s, r) => s + Number(r[5] || 0), 0), [monthRows]);
   const monthPaid = useMemo(
     () => monthRows.filter((r) => r[6] === "yes").reduce((s, r) => s + Number(r[5] || 0), 0),
     [monthRows]
@@ -289,7 +253,6 @@ export default function DebtDashboard() {
   const monthUnpaid = useMemo(() => monthTotal - monthPaid, [monthTotal, monthPaid]);
   const monthPercent = monthTotal > 0 ? Math.round((monthPaid / monthTotal) * 100) : 0;
 
-  // ---- chart ----
   const chartData = useMemo(() => {
     const map = {};
     months6.forEach((m) => (map[m] = 0));
@@ -303,7 +266,6 @@ export default function DebtDashboard() {
 
   const maxChart = Math.max(1, ...chartData.map((d) => d.v));
 
-  // ---- filters ----
   const filteredRows = useMemo(() => {
     return debts
       .filter((r) => r[2] !== "installment")
@@ -315,18 +277,17 @@ export default function DebtDashboard() {
       });
   }, [debts, filterMonth, filterStatus]);
 
-  // ---- actions: installment ----
   async function deletePlan(plan) {
     if (!window.confirm("ลบทั้งแผนผ่อนนี้? (จะลบทุกงวด)")) return;
-    for (const r of plan) {
-      await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          type: "delete_debt",
-          id: r[0],
-        }),
-      });
-    }
+    // ✅ แก้: ใช้ Promise.all แทน sequential loop
+    await Promise.all(
+      plan.map((r) =>
+        fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ type: "delete_debt", id: r[0] }),
+        })
+      )
+    );
     setOpenPlanId(null);
     await loadDebts();
   }
@@ -337,20 +298,15 @@ export default function DebtDashboard() {
     if (!target) return alert("แผนนี้จ่ายครบแล้ว");
     await fetch(API_URL, {
       method: "POST",
-      body: JSON.stringify({
-        type: "toggle_debt_paid",
-        id: target[0],
-      }),
+      body: JSON.stringify({ type: "toggle_debt_paid", id: target[0] }),
     });
     await loadDebts();
   }
 
-  // ---------- UI ----------
   return (
     <div className="debt-page">
-      <h2 className="page-title">Debt & Bills</h2>
+      <h2 className="page-title">หนี้ & บิล</h2>
 
-      {/* Summary */}
       <div className="card-box">
         <h3>สรุปเดือน {currentYM}</h3>
         <div className="summary-grid">
@@ -383,7 +339,6 @@ export default function DebtDashboard() {
         </button>
       </div>
 
-      {/* Chart */}
       <div className="card-box">
         <h3>กราฟยอดต้องจ่ายย้อนหลัง 6 เดือน</h3>
         <div className="chart">
@@ -405,7 +360,6 @@ export default function DebtDashboard() {
         </button>
       </div>
 
-      {/* Cards */}
       {tab === "cards" && (
         <div className="card-box">
           <h3>จัดการบัตรเครดิต</h3>
@@ -419,35 +373,26 @@ export default function DebtDashboard() {
               value={cutOffDay}
               onChange={(e) => setCutOffDay(e.target.value)}
             />
-            <button className="btn-add" onClick={addCard}>
-              + เพิ่มบัตร
-            </button>
+            <button className="btn-add" onClick={addCard}>+ เพิ่มบัตร</button>
           </div>
           <div className="card-list">
             {cards.length === 0 && <div className="empty">ยังไม่มีบัตร</div>}
             {cards.map((c) => (
               <div className="card-row" key={c.cardId}>
-                <div>
-                  <b>{c.name}</b> (ตัดรอบ {c.cutOffDay})
-                </div>
-                <button className="btn-delete" onClick={() => deleteCard(c.cardId)}>
-                  ลบ
-                </button>
+                <div><b>{c.name}</b> (ตัดรอบ {c.cutOffDay})</div>
+                <button className="btn-delete" onClick={() => deleteCard(c.cardId)}>ลบ</button>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* --------- TAB: ADD --------- */}
       {tab === "add" && (
         <>
           <div className="card-box">
             <h3>เพิ่มรายการ</h3>
-
             <div className="form-grid">
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-
               <select value={sourceType} onChange={(e) => setSourceType(e.target.value)}>
                 <option value="bill">บิล / เงินสด</option>
                 <option value="credit">บัตรเครดิต</option>
@@ -481,34 +426,19 @@ export default function DebtDashboard() {
 
               {isInstallment && (
                 <>
-                  <input
-                    type="number"
-                    placeholder="ยอดต่อเดือน"
-                    value={perMonth}
-                    onChange={(e) => setPerMonth(e.target.value)}
-                  />
-                  <input
-                    type="number"
-                    placeholder="จำนวนเดือน"
-                    value={months}
-                    onChange={(e) => setMonths(e.target.value)}
-                  />
-                  <div className="muted">
-                    ยอดรวม: <b>{currency(installmentTotalPreview)}</b>
-                  </div>
+                  <input type="number" placeholder="ยอดต่อเดือน" value={perMonth} onChange={(e) => setPerMonth(e.target.value)} />
+                  <input type="number" placeholder="จำนวนเดือน" value={months} onChange={(e) => setMonths(e.target.value)} />
+                  <div className="muted">ยอดรวม: <b>{currency(installmentTotalPreview)}</b></div>
                 </>
               )}
 
-              <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
-                <button className="btn-add" onClick={addItem}>
-                  + เพิ่มรายการ
-                </button>
+              <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "center", marginTop: "10px" }}>
+                <button className="btn-add" onClick={addItem}>+ เพิ่มรายการ</button>
               </div>
             </div>
           </div>
 
           <div className="card-container">
-            {/* --------- INSTALLMENTS (slide animation) --------- */}
             {installmentPlans.length > 0 && (
               <div className="card-box-1">
                 <h3>รายการผ่อน</h3>
@@ -522,26 +452,19 @@ export default function DebtDashboard() {
                     const per = Number(plan[0][5]);
                     const sum = per * total;
                     const isOpen = openPlanId === planId;
-
                     const planCardId = plan[0][4];
                     const planCardName = cards.find((c) => c.cardId === planCardId)?.name;
 
                     return (
                       <div key={idx} className="install-wrap">
                         <div className="install-card clickable" onClick={() => setOpenPlanId(isOpen ? null : planId)}>
-                          <div className="title">
-                            {name} <span className="chev">{isOpen ? "▾" : "▸"}</span>
-                          </div>
-
+                          <div className="title">{name} <span className="chev">{isOpen ? "▾" : "▸"}</span></div>
                           {planCardName && (
                             <div className="muted" style={{ fontSize: "0.72rem", color: "var(--accent)", marginBottom: "2px" }}>
                               💳 {planCardName}
                             </div>
                           )}
-
-                          <div className="muted">
-                            {paid}/{total} งวด
-                          </div>
+                          <div className="muted">{paid}/{total} งวด</div>
                           <div className="bar">
                             <div className="bar-fill" style={{ width: `${percent}%` }} />
                           </div>
@@ -551,57 +474,33 @@ export default function DebtDashboard() {
                           </div>
                           <div className="muted">รวม {currency(sum)}</div>
                           <div className="row actions">
-                            <button
-                              className="btn primary"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                payCurrentInstallment(plan);
-                              }}
-                            >
+                            <button className="btn primary" onClick={(e) => { e.stopPropagation(); payCurrentInstallment(plan); }}>
                               จ่ายงวดนี้
                             </button>
-                            <button
-                              className="btn danger"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deletePlan(plan);
-                              }}
-                            >
+                            <button className="btn danger" onClick={(e) => { e.stopPropagation(); deletePlan(plan); }}>
                               ลบทั้งแผน
                             </button>
                           </div>
                         </div>
 
-                        {/* SLIDE PANEL */}
                         <div className={`slide-panel ${isOpen ? "open" : ""}`}>
                           <div className="slide-inner">
-                            {plan
-                              .slice()
-                              .sort((a, b) => Number(a[9]) - Number(b[9]))
-                              .map((r, i) => (
-                                <div className="install-row" key={i}>
-                                  <div>
-                                    งวด {r[9]} / {r[10]}
-                                  </div>
-                                  <div>{showDate(r[1])}</div>
-                                  <div>{currency(r[5])}</div>
-                                  <div>
-                                    {r[6] === "yes" ? (
-                                      <span className="badge ok">จ่ายแล้ว</span>
-                                    ) : (
-                                      <span className="badge wait">ค้างจ่าย</span>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <button className="btn-delete" onClick={() => deleteDebt(r[0])}>
-                                      ลบ
-                                    </button>
-                                    <button className="btn" onClick={() => togglePaid(r[0])}>
-                                      สลับสถานะ
-                                    </button>
-                                  </div>
+                            {plan.slice().sort((a, b) => Number(a[9]) - Number(b[9])).map((r, i) => (
+                              <div className="install-row" key={i}>
+                                <div>งวด {r[9]} / {r[10]}</div>
+                                <div>{showDate(r[1])}</div>
+                                <div>{currency(r[5])}</div>
+                                <div>
+                                  {r[6] === "yes"
+                                    ? <span className="badge ok">จ่ายแล้ว</span>
+                                    : <span className="badge wait">ค้างจ่าย</span>}
                                 </div>
-                              ))}
+                                <div>
+                                  <button className="btn-delete" onClick={() => deleteDebt(r[0])}>ลบ</button>
+                                  <button className="btn" onClick={() => togglePaid(r[0])}>สลับสถานะ</button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -611,18 +510,11 @@ export default function DebtDashboard() {
               </div>
             )}
 
-            {/* --------- ALL LIST (exclude installment) --------- */}
             <div className="card-box-2">
               <h3>รายการทั้งหมด</h3>
-
-              {/* Filters */}
               <div className="filter-row">
                 <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)}>
-                  {months6.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
+                  {months6.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                   <option value="all">ทั้งหมด</option>
@@ -639,21 +531,21 @@ export default function DebtDashboard() {
                   <div>จำนวนเงิน</div>
                   <div>สถานะ</div>
                 </div>
-
                 {filteredRows.map((r, i) => (
                   <div className="trow" key={i}>
                     <div>{showDate(r[1])}</div>
                     <div>{r[3]}</div>
                     <div>
                       {r[2] === "credit"
-                        ? <span className="badge" style={{background:"#dbeafe",color:"#1d4ed8"}}>💳 บัตรเครดิต</span>
-                        : <span className="badge" style={{background:"#f0fdf4",color:"#15803d"}}>🧾 บิล</span>
-                      }
+                        ? <span className="badge" style={{ background: "#dbeafe", color: "#1d4ed8" }}>💳 บัตรเครดิต</span>
+                        : <span className="badge" style={{ background: "#f0fdf4", color: "#15803d" }}>🧾 บิล</span>}
                     </div>
                     <div>{currency(r[5])}</div>
                     <div className="action-group">
                       <div className="status-badge">
-                        {r[6] === "yes" ? <span className="badge ok">จ่ายแล้ว</span> : <span className="badge wait">ค้างจ่าย</span>}
+                        {r[6] === "yes"
+                          ? <span className="badge ok">จ่ายแล้ว</span>
+                          : <span className="badge wait">ค้างจ่าย</span>}
                       </div>
                       <div className="button-group">
                         <button className="btn-delete" onClick={() => deleteDebt(r[0])}>ลบ</button>
@@ -662,7 +554,6 @@ export default function DebtDashboard() {
                     </div>
                   </div>
                 ))}
-
                 {filteredRows.length === 0 && <div className="empty">ไม่พบรายการตามตัวกรอง</div>}
               </div>
             </div>

@@ -11,21 +11,22 @@ const TABS = [
   { id: "debt", icon: "💳", label: "Debt & Bills" },
 ];
 
-// ---- prefetch ทุก module แล้วเก็บ cache ----
+// ✅ แก้: เพิ่ม error handling + เช็คว่า response เป็น Array ก่อน cache
 function prefetchAll() {
   const modes = ["debt", "ot", "car", "cards"];
   modes.forEach(mode => {
     fetch(`${API_URL}?mode=${mode}`)
       .then(r => r.json())
       .then(data => {
-        localStorage.setItem(`cache_${mode}`, JSON.stringify(data));
+        if (Array.isArray(data) || typeof data === "object") {
+          localStorage.setItem(`cache_${mode}`, JSON.stringify(data));
+        }
       })
       .catch(() => {});
   });
 }
 
 export default function App() {
-  // ---- อ่าน tab จาก URL hash (F5 อยู่หน้าเดิม) ----
   const getInitialTab = () => {
     const hash = window.location.hash.replace("#", "");
     return TABS.find(t => t.id === hash) ? hash : "car";
@@ -34,12 +35,10 @@ export default function App() {
   const [tab, setTab] = useState(getInitialTab);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // ---- prefetch ตอนเปิดแอป ----
   useEffect(() => {
     prefetchAll();
   }, []);
 
-  // ---- sync tab กับ URL hash ----
   const handleNav = (id, onNav) => {
     setTab(id);
     window.location.hash = id;
@@ -65,12 +64,10 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      {/* Desktop Sidebar */}
       <aside className="sidebar">
         <SidebarContent />
       </aside>
 
-      {/* Mobile Drawer */}
       <div
         className={`drawer-overlay${drawerOpen ? " open" : ""}`}
         onClick={() => setDrawerOpen(false)}
@@ -79,9 +76,7 @@ export default function App() {
         <SidebarContent onNav={() => setDrawerOpen(false)} />
       </aside>
 
-      {/* Main */}
       <div className="main-content">
-        {/* Mobile Topbar */}
         <div className="mobile-topbar">
           <button className="hamburger" onClick={() => setDrawerOpen(true)}>☰</button>
           <span className="mobile-logo">💰 MY HUB</span>

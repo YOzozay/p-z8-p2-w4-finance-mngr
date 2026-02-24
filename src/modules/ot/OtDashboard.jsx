@@ -6,7 +6,7 @@ export default function OtDashboard() {
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [data, setData] = useState([]);
-  const [showSalary, setShowSalary] = useState(false); // เริ่มต้นเป็น false (ปิดตา)
+  const [showSalary, setShowSalary] = useState(false);
 
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem("app_config");
@@ -36,22 +36,21 @@ export default function OtDashboard() {
     dayType: "work",
   });
 
-const fetchOt = async () => {
-  const cached = localStorage.getItem("cache_ot");
-  if (cached) setData(JSON.parse(cached));
-
-  if (!cached) setLoading(true); // ← แก้: หมุนเฉพาะตอนไม่มี cache
-  try {
-    const res = await fetch(`${API_URL}?mode=ot`);
-    const json = await res.json();
-    setData(Array.isArray(json) ? json : []);
-    localStorage.setItem("cache_ot", JSON.stringify(json));
-  } catch (e) {
-    console.error(e);
-  } finally {
-    setLoading(false);
-  }
-};
+  const fetchOt = async () => {
+    const cached = localStorage.getItem("cache_ot");
+    if (cached) setData(JSON.parse(cached));
+    if (!cached) setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}?mode=ot`);
+      const json = await res.json();
+      setData(Array.isArray(json) ? json : []);
+      localStorage.setItem("cache_ot", JSON.stringify(json));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchOt();
@@ -60,8 +59,6 @@ const fetchOt = async () => {
   const otSummary = useMemo(() => {
     let totalHrsCurrentCycle = 0;
     let allowanceCurrentCycle = 0;
-    
-    // 1. เพิ่มตัวแปรเก็บสะสมชั่วโมงแยกประเภท
     let hrsX1 = 0;
     let hrsX15 = 0;
     let hrsX3 = 0;
@@ -87,25 +84,21 @@ const fetchOt = async () => {
     data.forEach((row) => {
       const rawDate = new Date(row[0]);
       const rowDateInt = toInt(new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate()));
-
       const foodNormal = Number(row[6]) || 0;
       const gas = Number(row[8]) || 0;
       const isOt15or3 = (Number(row[2]) || 0) > 0 || (Number(row[3]) || 0) > 0;
       const foodOt = isOt15or3 ? (Number(row[7]) || 0) : 0;
       const dailyTotalAllowance = foodNormal + foodOt + gas;
-
       if (rowDateInt >= startInt && rowDateInt <= endInt) {
         allowanceCurrentCycle += dailyTotalAllowance;
         currentCycleRows.push(row);
       }
     });
 
-    // 2. คำนวณชั่วโมงแยกประเภทจากข้อมูลรอบปัจจุบัน
     currentCycleRows.forEach((row) => {
       const h1 = Number(row[1]) || 0;
       const h15 = Number(row[2]) || 0;
       const h3 = Number(row[3]) || 0;
-
       hrsX1 += h1;
       hrsX15 += h15;
       hrsX3 += h3;
@@ -130,9 +123,9 @@ const fetchOt = async () => {
 
     return {
       totalHrs: totalHrsCurrentCycle,
-      hrsX1,  
-      hrsX15, 
-      hrsX3,  
+      hrsX1,
+      hrsX15,
+      hrsX3,
       otPay,
       netSalary,
       allowance: allowanceCurrentCycle,
@@ -146,11 +139,9 @@ const fetchOt = async () => {
     const checkDate = new Date(otForm.date);
     const isSunday = checkDate.getDay() === 0;
     const finalDayType = isSunday ? "holiday" : otForm.dayType;
-
     try {
       await fetch(API_URL, {
         method: "POST",
-        /*de: "no-cors",*/
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({
           type: "add_ot",
@@ -164,8 +155,16 @@ const fetchOt = async () => {
           incentive: config.incentive,
         }),
       });
-      setOtForm({ ...otForm, ot1: 0, ot15: 0, ot3: 0, note: "", dayType: "work" });
-      setTimeout(fetchOt, 800);
+      // ✅ แก้: reset date ด้วย
+      setOtForm({
+        date: new Date().toISOString().split("T")[0],
+        ot1: 0,
+        ot15: 0,
+        ot3: 0,
+        note: "",
+        dayType: "work",
+      });
+      await fetchOt(); // ✅ แก้: ใช้ await แทน setTimeout
     } catch (e) {
       console.error(e);
       setLoading(false);
@@ -176,13 +175,13 @@ const fetchOt = async () => {
     if (!confirm("ยืนยันการลบรายการนี้?")) return;
     setLoading(true);
     try {
+      // ✅ แก้: ลบ mode: "no-cors" ออก
       await fetch(API_URL, {
         method: "POST",
-        mode: "no-cors",
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({ type: "delete_ot", rowIndex }),
       });
-      setTimeout(fetchOt, 800);
+      await fetchOt(); // ✅ แก้: ใช้ await แทน setTimeout
     } catch (e) {
       console.error(e);
       setLoading(false);
@@ -231,45 +230,37 @@ const fetchOt = async () => {
 
       <div className="summary-grid">
         <div className="card primary">
-          <div className="card-label-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="card-label-container" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div className="card-label">รายรับสุทธิ</div>
-            <button 
-              onClick={() => setShowSalary(!showSalary)} 
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+            <button
+              onClick={() => setShowSalary(!showSalary)}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem" }}
             >
               {showSalary ? "👁️" : "🙈"}
             </button>
           </div>
           <div className="card-value">
-            ฿ {showSalary 
-              ? Math.floor(otSummary.netSalary).toLocaleString() 
-              : "******"}
+            ฿ {showSalary ? Math.floor(otSummary.netSalary).toLocaleString() : "******"}
           </div>
         </div>
 
         <div className="card">
           <div className="card-label">สะสม OT รอบนี้</div>
-          <div className="card-value">
-            {otSummary.totalHrs.toFixed(1)} hour.
-          </div>
-          
-          {/* 3. ส่วนแสดง ชม. แยกประเภท x1, x1.5, x3 */}
-          <div style={{ display: 'flex', justifyContent: 'space-around', fontSize: '0.85rem', margin: '4px 0', color: '#64748b', fontWeight: 'bold' }}>
+          <div className="card-value">{otSummary.totalHrs.toFixed(1)} ชม.</div>
+          <div style={{ display: "flex", justifyContent: "space-around", fontSize: "0.85rem", margin: "4px 0", color: "#64748b", fontWeight: "bold" }}>
             <span>x1: {otSummary.hrsX1}</span>
             <span>x1.5: {otSummary.hrsX15}</span>
             <span>x3: {otSummary.hrsX3}</span>
           </div>
-
           <div className="card-sub">
-            {/* 4. ยกเลิกการใช้ showSalary ตรงนี้เพื่อให้โชว์ยอดเงินตลอดเวลา */}
-             ฿ {Math.floor(otSummary.otPay).toLocaleString()} 
+            ฿ {Math.floor(otSummary.otPay).toLocaleString()}
           </div>
         </div>
       </div>
 
       <div className="main-grid">
         <form className="form-card" onSubmit={handleAddOt}>
-           <h3>บันทึก OT</h3>
+          <h3>บันทึก OT</h3>
           <input
             type="date"
             value={otForm.date}
@@ -319,7 +310,8 @@ const fetchOt = async () => {
         <div className="history-card">
           <div className="history-header">
             <h3>รอบปัจจุบัน 21-20</h3>
-            <span>รายได้ OT/รอบ : ฿{otSummary.allowance.toLocaleString()}</span>
+            {/* ✅ แก้: label ถูกต้อง */}
+            <span>ค่าข้าว+น้ำมัน  : ฿{otSummary.allowance.toLocaleString()}</span>
           </div>
           <div className="history-list">
             {otSummary.currentCycleData.length > 0 ? (
