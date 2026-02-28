@@ -1,7 +1,26 @@
 /* ============================================================
    OT.CSS — Overtime & Income Tracker
+
+   สารบัญ:
+   1.  Page Layout
+   2.  Header
+   3.  Settings Panel
+   4.  Summary Cards
+   5.  Toggle Button (วันทำงาน / วันหยุด)
+   6.  Form Card
+   7.  OT Inputs
+   8.  Submit Button
+   9.  History Card
+   10. History Row
+   11. Delete Button
+   12. Responsive — Tablet (≤768px)
+   13. Responsive — Mobile (≤480px)
    ============================================================ */
 
+
+/* ============================================================
+   1. PAGE LAYOUT
+   ============================================================ */
 .ot-page {
   max-width: 1100px;
   margin: 0 auto;
@@ -9,14 +28,17 @@
   font-family: var(--font-sans);
 }
 
-/* ── Header ── */
+
+/* ============================================================
+   2. HEADER
+   ============================================================ */
 .ot-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-6);
-  gap: var(--space-4);
   flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 .ot-header h2 {
   font-size: clamp(1.3rem, 3vw, 1.6rem);
@@ -24,19 +46,20 @@
   color: var(--text-primary);
 }
 
+/* ปุ่มตั้งค่า */
 .btn-ghost {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  padding: 8px 14px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  transition: all var(--ease);
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--ease);
 }
 .btn-ghost:hover {
   border-color: var(--border-strong);
@@ -46,30 +69,35 @@
   opacity: 1;
 }
 
-/* ── Settings Card ── */
+
+/* ============================================================
+   3. SETTINGS PANEL — grid ปรับค่าต่างๆ
+   ============================================================ */
 .settings-card {
-  background: var(--bg-surface);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  margin-bottom: var(--space-5);
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: var(--space-3);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
-
 .field label {
+  display: block;
+  margin-bottom: var(--space-1);
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  display: block;
-  margin-bottom: var(--space-1);
 }
 
-/* ── Summary Grid (2 cards) ── */
+
+/* ============================================================
+   4. SUMMARY CARDS — 2 คอลัมน์ (รายรับสุทธิ / สะสม OT)
+   ============================================================ */
 .summary-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -79,45 +107,29 @@
 
 .card {
   background: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: var(--space-5);
-  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--ease);
 }
 .card:hover { box-shadow: var(--shadow-md); }
 
+/* Primary card (gradient สีน้ำเงิน) */
 .card.primary {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
-  color: #fff;
   border-color: transparent;
-  box-shadow: 0 8px 24px rgba(61,111,248,0.28);
+  box-shadow: 0 8px 24px rgba(61, 111, 248, 0.28);
+  color: #fff;
 }
-.card.primary:hover {
-  box-shadow: 0 12px 32px rgba(61,111,248,0.38);
-}
+.card.primary:hover { box-shadow: 0 12px 32px rgba(61, 111, 248, 0.38); }
 
-/* toggle btn inside primary card */
 .card-label-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-2);
 }
-.toggle-btn {
-  background: rgba(255,255,255,0.18);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: white;
-  padding: 4px 8px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background var(--ease);
-  line-height: 1;
-  transform: none;
-}
-.toggle-btn:hover { background: rgba(255,255,255,0.35); transform: none; opacity: 1; }
-
 .card-label {
   font-size: 0.75rem;
   font-weight: 700;
@@ -125,7 +137,7 @@
   letter-spacing: 0.06em;
   opacity: 0.75;
 }
-.card.primary .card-label { color: rgba(255,255,255,0.85); }
+.card.primary    .card-label { color: rgba(255,255,255,0.85); }
 .card:not(.primary) .card-label { color: var(--text-muted); }
 
 .card-value {
@@ -136,7 +148,7 @@
   letter-spacing: -0.03em;
   line-height: 1.1;
 }
-.card.primary .card-value { color: #fff; }
+.card.primary    .card-value { color: #fff; }
 .card:not(.primary) .card-value { color: var(--text-primary); }
 
 .card-sub {
@@ -144,10 +156,52 @@
   font-size: 0.85rem;
   font-weight: 700;
 }
-.card.primary .card-sub { color: rgba(255,255,255,0.9); }
+.card.primary    .card-sub { color: rgba(255,255,255,0.9); }
 .card:not(.primary) .card-sub { color: var(--success); }
 
-/* ── Main 2-col Grid ── */
+
+/* ============================================================
+   5. TOGGLE BUTTON — วันทำงาน / วันหยุด
+   ============================================================ */
+.toggle-row {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.toggle {
+  flex: 1;
+  padding: 9px;
+  text-align: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transform: none;
+  transition: all var(--ease);
+}
+.toggle:hover { border-color: var(--accent); color: var(--accent); transform: none; opacity: 1; }
+
+/* Active: วันทำงาน */
+.toggle.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 3px 10px rgba(61, 111, 248, 0.28);
+}
+/* Active: วันหยุด */
+.toggle.holiday.active {
+  background: var(--warning);
+  border-color: var(--warning);
+  box-shadow: 0 3px 10px rgba(234, 124, 10, 0.28);
+}
+
+
+/* ============================================================
+   6. FORM CARD + HISTORY CARD — 2-column layout
+   ============================================================ */
 .main-grid {
   display: grid;
   grid-template-columns: 1fr 2fr;
@@ -157,118 +211,95 @@
 .form-card,
 .history-card {
   background: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: var(--space-5);
-  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
 }
 
-/* แก้เป็น — เพิ่ม display flex + gap ให้ form-card */
+/* Form: ใช้ flex column + gap แทน margin */
 .form-card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);  /* ← เพิ่มช่องว่างระหว่างทุก element */
+  gap: var(--space-3);
 }
-
 .form-card h3,
 .history-header h3 {
   font-size: 0.95rem;
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 0; /* ← เอา margin ออก เพราะใช้ gap แทน */
 }
 
-/* ── Toggle (day/holiday) ── */
-.toggle-row {
-  display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-.toggle {
-  flex: 1;
-  padding: 9px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--bg-subtle);
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  transition: all var(--ease);
-  text-align: center;
-  transform: none;
-}
-.toggle:hover { border-color: var(--accent); color: var(--accent); transform: none; opacity: 1; }
-.toggle.active {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-  box-shadow: 0 3px 10px rgba(61,111,248,0.28);
-}
-.toggle.holiday.active {
-  background: var(--warning);
-  border-color: var(--warning);
-  box-shadow: 0 3px 10px rgba(234,124,10,0.28);
-}
 
-/* ── OT Inputs ── */
+/* ============================================================
+   7. OT INPUTS — 3 ช่อง (×1, ×1.5, ×3)
+   ============================================================ */
 .ot-inputs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2);
 }
 
-/* ── Primary Submit Button ── */
+
+/* ============================================================
+   8. SUBMIT BUTTON
+   ============================================================ */
 .btn-primary {
   width: 100%;
   padding: 11px;
-  border-radius: var(--radius-md);
   border: none;
+  border-radius: var(--radius-md);
   background: var(--accent);
   color: #fff;
   font-weight: 800;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all var(--ease);
-  box-shadow: 0 4px 12px rgba(61,111,248,0.28);
   margin-top: var(--space-1);
+  box-shadow: 0 4px 12px rgba(61, 111, 248, 0.28);
+  transition: all var(--ease);
 }
 .btn-primary:hover {
   background: var(--accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(61,111,248,0.38);
+  box-shadow: 0 6px 18px rgba(61, 111, 248, 0.38);
   opacity: 1;
 }
 
-/* ── History ── */
+
+/* ============================================================
+   9. HISTORY CARD — ประวัติ OT รอบปัจจุบัน
+   ============================================================ */
 .history-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-3);
-  color: var(--text-muted);
   font-size: 0.72rem;
   font-weight: 700;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-
 .history-list {
-  max-height: 420px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  max-height: 420px;
+  overflow-y: auto;
 }
 
+
+/* ============================================================
+   10. HISTORY ROW — แต่ละแถววันทำงาน
+   ============================================================ */
 .history-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: var(--space-3);
   background: var(--bg-subtle);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: var(--space-3);
   transition: all var(--ease);
 }
 .history-row:hover {
@@ -283,15 +314,15 @@
   color: var(--text-primary);
 }
 .history-row .note {
+  margin-top: 2px;
   font-size: 0.72rem;
   color: var(--text-muted);
-  margin-top: 2px;
 }
 .history-row .right {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
   flex-shrink: 0;
+  gap: var(--space-3);
 }
 .history-row .detail {
   font-size: 0.72rem;
@@ -302,22 +333,25 @@
 .history-row .money {
   font-weight: 800;
   font-size: 0.95rem;
-  color: var(--accent);
   font-family: var(--font-mono);
+  color: var(--accent);
   white-space: nowrap;
 }
 
-/* btn-delete inside history */
+
+/* ============================================================
+   11. DELETE BUTTON — ใช้ใน history row
+   ============================================================ */
 .btn-delete {
+  padding: 4px 8px;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 4px 8px;
-  cursor: pointer;
-  color: var(--text-muted);
   font-size: 0.8rem;
-  transition: all var(--ease);
+  color: var(--text-muted);
+  cursor: pointer;
   transform: none;
+  transition: all var(--ease);
 }
 .btn-delete:hover {
   background: var(--danger-soft);
@@ -327,26 +361,28 @@
   opacity: 1;
 }
 
-/* ── Responsive ── */
+
+/* ============================================================
+   12. RESPONSIVE — TABLET (≤768px)
+   ============================================================ */
 @media (max-width: 768px) {
-  .ot-page { padding: var(--space-4); }
+  .ot-page    { padding: var(--space-4); }
   .summary-grid { grid-template-columns: 1fr; }
   .main-grid    { grid-template-columns: 1fr; }
   .ot-inputs    { grid-template-columns: repeat(2, 1fr); }
   .settings-card { grid-template-columns: repeat(2, 1fr); }
 }
 
+
+/* ============================================================
+   13. RESPONSIVE — MOBILE (≤480px)
+   ============================================================ */
 @media (max-width: 480px) {
-  .ot-header { flex-direction: column; align-items: flex-start; }
-  .ot-inputs { grid-template-columns: 1fr; }
+  .ot-header    { flex-direction: column; align-items: flex-start; }
+  .ot-inputs    { grid-template-columns: 1fr; }
   .settings-card { grid-template-columns: 1fr; }
-  .history-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2);
-  }
-  .history-row .right {
-    width: 100%;
-    justify-content: space-between;
-  }
+
+  /* history row เปลี่ยนเป็นแนวตั้ง */
+  .history-row { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+  .history-row .right { width: 100%; justify-content: space-between; }
 }

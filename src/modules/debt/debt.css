@@ -1,20 +1,48 @@
 /* ============================================================
-   DEBT.CSS — Debt & Bills Tracker (Fully Responsive)
+   DEBT.CSS — Debt & Bills Tracker
+   ============================================================
+
+   สารบัญ:
+   1.  Page Layout
+   2.  Card Box
+   3.  Card Container (2-column)
+   4.  Summary Grid
+   5.  Progress Bar
+   6.  Chart (กราฟแท่ง)
+   7.  Tabs
+   8.  Forms
+   9.  Buttons
+   10. Card List (บัตรเครดิต)
+   11. Installment Grid + Card
+   12. Slide Panel (ขยาย/ยุบ)
+   13. Install Row
+   14. Badge
+   15. Table
+   16. Action Group
+   17. Responsive — Mobile (≤680px)
+   18. Responsive — Small (≤380px)
    ============================================================ */
 
+
+/* ============================================================
+   1. PAGE LAYOUT
+   ============================================================ */
 .debt-page {
   max-width: 100%;
+  width: 100%;
   margin: 0 auto;
   padding: var(--space-6);
-  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
   font-family: var(--font-sans);
-  box-sizing: border-box;
 }
 
-/* ── Card Box ── */
+
+/* ============================================================
+   2. CARD BOX — กล่องหลักแต่ละส่วน
+   ============================================================ */
 .card-box {
   width: 100%;
   background: var(--bg-surface);
@@ -27,7 +55,10 @@
 }
 .card-box:hover { box-shadow: var(--shadow-md); }
 
-/* ── Card Container — CSS Grid (ไม่มีปัญหาทุกขนาด) ── */
+
+/* ============================================================
+   3. CARD CONTAINER — 2 คอลัมน์ (ผ่อน | รายการทั้งหมด)
+   ============================================================ */
 .card-container {
   display: grid;
   grid-template-columns: minmax(280px, 420px) 1fr;
@@ -35,16 +66,16 @@
   width: 100%;
   align-items: start;
 }
-.card-box-1 {
-  min-width: 0;
-  width: 100%;
-}
+.card-box-1,
 .card-box-2 {
-  min-width: 0;
+  min-width: 0; /* ป้องกัน overflow ใน grid */
   width: 100%;
 }
 
-/* ── Summary Grid ── */
+
+/* ============================================================
+   4. SUMMARY GRID — 3 ช่อง: ต้องจ่าย / จ่ายแล้ว / ค้างจ่าย
+   ============================================================ */
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
@@ -59,7 +90,10 @@
 .sum-card.ok   { background: var(--success-soft); border-color: rgba(22,163,74,0.2); }
 .sum-card.wait { background: var(--warning-soft); border-color: rgba(234,124,10,0.2); }
 
-/* ── Progress ── */
+
+/* ============================================================
+   5. PROGRESS BAR — แถบความคืบหน้าการจ่าย
+   ============================================================ */
 .progress-wrap {
   display: flex;
   align-items: center;
@@ -77,10 +111,13 @@
   height: 100%;
   background: linear-gradient(90deg, var(--success), #4ade80);
   border-radius: var(--radius-full);
-  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Chart ── */
+
+/* ============================================================
+   6. CHART — กราฟแท่ง 6 เดือน
+   ============================================================ */
 .chart {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -110,7 +147,10 @@
   word-break: break-all;
 }
 
-/* ── Tabs ── */
+
+/* ============================================================
+   7. TABS — แถบเลือกเพิ่มรายการ / จัดการบัตร
+   ============================================================ */
 .tab-row {
   display: flex;
   gap: var(--space-2);
@@ -128,16 +168,20 @@
   color: var(--text-secondary);
   transition: all var(--ease);
 }
-.tab:hover { border-color: var(--accent); color: var(--accent); }
+.tab:hover  { border-color: var(--accent); color: var(--accent); }
 .tab.active {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
-  box-shadow: 0 2px 8px rgba(61,111,248,0.28);
+  box-shadow: 0 2px 8px rgba(61, 111, 248, 0.28);
 }
 
-/* ── Forms ── */
-.form-row, .filter-row {
+
+/* ============================================================
+   8. FORMS — ฟอร์มเพิ่มรายการ / ฟิลเตอร์
+   ============================================================ */
+.form-row,
+.filter-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
@@ -149,7 +193,12 @@
   gap: var(--space-2);
 }
 
-/* ── Buttons ── */
+
+/* ============================================================
+   9. BUTTONS
+   ============================================================ */
+
+/* ปุ่มเพิ่ม (สีเขียว) */
 .btn-add {
   background: var(--success);
   color: #fff;
@@ -159,25 +208,27 @@
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all var(--ease);
   white-space: nowrap;
+  transition: all var(--ease);
 }
 .btn-add:hover { opacity: 0.88; transform: translateY(-1px); }
 
+/* ปุ่มลบ (สีแดง soft) */
 .btn-delete {
   background: var(--danger-soft);
   color: var(--danger);
-  border: 1px solid rgba(220,38,38,0.2);
+  border: 1px solid rgba(220, 38, 38, 0.2);
   padding: 5px 10px;
   border-radius: var(--radius-sm);
   font-size: clamp(0.68rem, 1.4vw, 0.78rem);
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--ease);
   white-space: nowrap;
+  transition: all var(--ease);
 }
 .btn-delete:hover { background: var(--danger); color: #fff; }
 
+/* ปุ่มทั่วไป */
 .btn {
   background: var(--bg-muted);
   border: 1px solid var(--border);
@@ -187,15 +238,20 @@
   font-weight: 600;
   color: var(--text-primary);
   cursor: pointer;
-  transition: all var(--ease);
   white-space: nowrap;
+  transition: all var(--ease);
 }
 .btn:hover { background: var(--bg-subtle); }
+
+/* Variants */
 .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 .btn.primary:hover { background: var(--accent-hover); }
-.btn.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn.danger  { background: var(--danger); color: #fff; border-color: var(--danger); }
 
-/* ── Card List ── */
+
+/* ============================================================
+   10. CARD LIST — รายการบัตรเครดิต
+   ============================================================ */
 .card-list .card-row {
   display: flex;
   justify-content: space-between;
@@ -206,15 +262,19 @@
   color: var(--text-primary);
   transition: background var(--ease);
 }
-.card-list .card-row:hover { background: var(--bg-subtle); }
+.card-list .card-row:hover      { background: var(--bg-subtle); }
 .card-list .card-row:last-child { border-bottom: none; }
 
-/* ── Installment Grid ── */
+
+/* ============================================================
+   11. INSTALLMENT GRID + CARD
+   ============================================================ */
 .installment-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--space-3);
 }
+
 .install-card {
   background: var(--bg-subtle);
   border: 1px solid var(--border);
@@ -228,6 +288,8 @@
   box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }
+
+/* Progress bar ใน install-card */
 .install-card .bar {
   height: 7px;
   background: var(--bg-muted);
@@ -241,17 +303,23 @@
   border-radius: var(--radius-full);
   transition: width 0.5s ease;
 }
+
+/* แถว % + ยอด/เดือน */
 .install-card .row {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-/* ── Slide Panel ── */
+
+
+/* ============================================================
+   12. SLIDE PANEL — ขยาย/ยุบแสดงงวดผ่อน
+   ============================================================ */
 .install-wrap {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  position: relative; /* ✅ เพิ่ม */
+  position: relative;
 }
 
 .slide-panel {
@@ -259,10 +327,9 @@
   max-height: 0;
   transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .slide-panel.open {
   max-height: 600px;
-  overflow: visible; /* ✅ ให้ขยายออกได้ */
+  overflow: visible;
 }
 
 .slide-inner {
@@ -274,21 +341,17 @@
   overflow-x: auto;
   overflow-y: auto;
   max-height: 560px;
-
-  /* ✅ ยืดขวา */
+  /* ยืดขวาเพื่อแสดงตารางงวดให้ครบ (desktop เท่านั้น) */
   width: calc(100% + 220px);
   box-shadow: var(--shadow-md);
   position: relative;
   z-index: 10;
 }
 
-@media (max-width: 680px) {
-  .slide-inner {
-    width: 100%; /* ✅ มือถือไม่ยืด */
-  }
-}
 
-/* ── Install Row ── */
+/* ============================================================
+   13. INSTALL ROW — แต่ละงวดใน slide panel
+   ============================================================ */
 .install-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr auto;
@@ -301,7 +364,10 @@
 }
 .install-row:last-child { border-bottom: none; }
 
-/* ── Badge ── */
+
+/* ============================================================
+   14. BADGE — สถานะ / ประเภท
+   ============================================================ */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -315,22 +381,29 @@
 .badge.ok   { background: var(--success-soft); color: var(--success); }
 .badge.wait { background: var(--warning-soft); color: var(--warning); }
 
-/* ── Table ── */
+
+/* ============================================================
+   15. TABLE — รายการทั้งหมด
+   คอลัมน์: วันที่ | รายการ | ประเภท | จำนวนเงิน | สถานะ
+   ============================================================ */
 .table { width: 100%; overflow-x: auto; }
+
 .table .thead,
 .table .trow {
   display: grid;
   grid-template-columns:
-    minmax(72px, 0.9fr)
-    minmax(90px, 1.8fr)
-    minmax(80px, 1fr)
-    minmax(65px, 0.8fr)
-    minmax(130px, 1.3fr);
+    minmax(72px,  0.9fr)   /* วันที่      */
+    minmax(90px,  1.8fr)   /* รายการ      */
+    minmax(80px,  1fr)     /* ประเภท      */
+    minmax(65px,  0.8fr)   /* จำนวนเงิน  */
+    minmax(130px, 1.3fr);  /* สถานะ+ปุ่ม  */
   gap: clamp(4px, 1vw, 10px);
   align-items: center;
   padding: 6px 0;
   font-size: clamp(0.68rem, 1.4vw, 0.8rem);
 }
+
+/* หัวตาราง */
 .table .thead {
   font-weight: 700;
   color: var(--text-muted);
@@ -340,19 +413,24 @@
   font-size: clamp(0.58rem, 1.1vw, 0.7rem);
   padding-bottom: var(--space-2);
 }
+
+/* แถวข้อมูล */
 .table .trow {
   border-bottom: 1px solid var(--border);
   color: var(--text-primary);
   transition: background var(--ease);
 }
-.table .trow:hover { background: var(--bg-subtle); border-radius: var(--radius-sm); }
+.table .trow:hover      { background: var(--bg-subtle); border-radius: var(--radius-sm); }
 .table .trow:last-child { border-bottom: none; }
 
+/* หัวทุกคอลัมน์: center */
 .table .thead div {
   display: flex;
   justify-content: center;
   text-align: center;
 }
+
+/* คอลัมน์ที่ center ในแถวข้อมูล: วันที่(1) ประเภท(3) จำนวนเงิน(4) */
 .table .trow div:nth-child(1),
 .table .trow div:nth-child(3),
 .table .trow div:nth-child(4) {
@@ -361,17 +439,22 @@
   text-align: center;
   white-space: nowrap;
 }
+
+/* คอลัมน์ "รายการ": center + ตัดด้วย ellipsis เมื่อยาวเกิน */
 .table .trow div:nth-child(2) {
+  display: flex;
+  justify-content: center;
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-  display: flex;
-  justify-content: center;
-  text-align: center;
 }
 
-/* ── Action Group ── */
+
+/* ============================================================
+   16. ACTION GROUP — สถานะ + ปุ่มลบ/สลับ
+   ============================================================ */
 .action-group {
   display: flex;
   flex-direction: column;
@@ -384,33 +467,42 @@
   flex-wrap: nowrap;
 }
 
-/* ── Mobile: stack ── */
+
+/* ============================================================
+   17. RESPONSIVE — MOBILE (≤680px)
+   ============================================================ */
 @media (max-width: 680px) {
   .debt-page { padding: var(--space-3); }
 
-  .card-container {
-    grid-template-columns: 1fr;
-  }
+  /* stack 2 คอลัมน์เป็น 1 */
+  .card-container { grid-template-columns: 1fr; }
 
-  .form-grid { grid-template-columns: 1fr; }
+  /* slide-inner ไม่ยืดบน mobile */
+  .slide-inner { width: 100%; }
+
+  /* ฟอร์ม */
+  .form-grid        { grid-template-columns: 1fr; }
   .installment-grid { grid-template-columns: 1fr; }
-  .install-row { grid-template-columns: repeat(2, 1fr); }
-  .chart { grid-template-columns: repeat(3, 1fr); }
-  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .install-row      { grid-template-columns: repeat(2, 1fr); }
+  .chart            { grid-template-columns: repeat(3, 1fr); }
+  .summary-grid     { grid-template-columns: repeat(2, 1fr); }
 
+  /* ซ่อนคอลัมน์ "ประเภท" (col 3) และ header "สถานะ" (col 5) */
   .table .thead div:nth-child(3),
-  .table .thead div:nth-child(5) { display: none; }
-  .table .trow div:nth-child(3) { display: none; }
+  .table .thead div:nth-child(5),
+  .table .trow  div:nth-child(3) { display: none; }
 
+  /* ปรับ grid เป็น 4 คอลัมน์ */
   .table .thead,
   .table .trow {
     grid-template-columns:
-      minmax(65px, 0.8fr)
-      minmax(80px, 1.5fr)
-      minmax(60px, 0.7fr)
-      minmax(110px, 1fr);
+      minmax(65px,  0.8fr)   /* วันที่     */
+      minmax(80px,  1.5fr)   /* รายการ     */
+      minmax(60px,  0.7fr)   /* จำนวนเงิน */
+      minmax(110px, 1fr);    /* ปุ่ม        */
   }
 
+  /* action-group ย้ายลงแถวใหม่เต็มความกว้าง */
   .table .trow .action-group {
     grid-column: 1 / -1;
     flex-direction: row;
@@ -419,8 +511,13 @@
   }
 }
 
+
+/* ============================================================
+   18. RESPONSIVE — SMALL (≤380px)
+   ============================================================ */
 @media (max-width: 380px) {
   .summary-grid { grid-template-columns: 1fr; }
+
   .table .thead,
   .table .trow {
     grid-template-columns: 60px 1fr 55px auto;

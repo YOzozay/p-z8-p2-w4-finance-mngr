@@ -1,20 +1,36 @@
+// ============================================================
+//  CARDASHBOARD.JSX — Car Loan Payment Tracker
+//  แสดงยอดคงเหลือ, ความคืบหน้า, งวดถัดไป, ประวัติการชำระ
+// ============================================================
+
 import { useEffect, useMemo, useState } from "react";
 import "./car.css";
 import { API_URL } from "../../config/api";
 
-export default function CarDashboard() {
-  const [loading, setLoading] = useState(false);
-  const [rows, setRows] = useState([]);
+// ── Column Index Reference (Google Sheet) ───────────────────
+// r[0] = งวดที่  r[1] = วันที่ชำระ  r[2] = จำนวนเงิน  r[3] = สถานะ
 
+export default function CarDashboard() {
+
+  const [loading, setLoading] = useState(false);
+  const [rows,    setRows]    = useState([]); // ข้อมูลทุกงวด
+
+  // ============================================================
+  //  DATA FETCHING
+  // ============================================================
+
+  /** โหลดข้อมูลงวดรถ (มี cache ใน localStorage) */
   const fetchCar = async () => {
     const cached = localStorage.getItem("cache_car");
     if (cached) setRows(JSON.parse(cached));
     if (!cached) setLoading(true);
+
     try {
-      const res = await fetch(`${API_URL}?mode=car`);
+      const res  = await fetch(`${API_URL}?mode=car`);
       const json = await res.json();
-      setRows(Array.isArray(json) ? json : []);
-      localStorage.setItem("cache_car", JSON.stringify(json));
+      const list = Array.isArray(json) ? json : [];
+      setRows(list);
+      localStorage.setItem("cache_car", JSON.stringify(list));
     } catch (e) {
       console.error("fetch car error", e);
     } finally {
@@ -26,36 +42,58 @@ export default function CarDashboard() {
     fetchCar();
   }, []);
 
+  // ============================================================
+  //  COMPUTED: สถิติสรุป
+  // ============================================================
+
   const stats = useMemo(() => {
-    const total = rows.length;
+    const total     = rows.length;
     const paidCount = rows.filter((r) => r[3] === "ชำระแล้ว").length;
-    const unpaidCount = total - paidCount;
-    const amountPerInstallment = rows.length > 0 ? Number(rows[0][2] || 0) : 0;
-    const totalPaid = paidCount * amountPerInstallment;
-    const remaining = unpaidCount * amountPerInstallment;
-    const next = rows.find((r) => r[3] !== "ชำระแล้ว") || null;
-    const progressPct = total > 0 ? Math.round((paidCount / total) * 100) : 0;
-    return { total, paidCount, unpaidCount, totalPaid, remaining, next, progressPct, amountPerInstallment };
+    const unpaid    = total - paidCount;
+
+    // ยอดต่องวดดูจากแถวแรก (งวดทุกงวดเท่ากัน)
+    const perInstallment = rows.length > 0 ? Number(rows[0][2] || 0) : 0;
+
+    return {
+      total,
+      paidCount,
+      unpaidCount:  unpaid,
+      totalPaid:    paidCount * perInstallment,
+      remaining:    unpaid * perInstallment,
+      progressPct:  total > 0 ? Math.round((paidCount / total) * 100) : 0,
+      next:         rows.find((r) => r[3] !== "ชำระแล้ว") || null, // งวดถัดไป
+    };
   }, [rows]);
 
-  // ✅ แก้: ใช้ await fetchCar() แทน setTimeout
+  // ============================================================
+  //  ACTIONS
+  // ============================================================
+
+  /** ชำระงวดที่ระบุ */
   const payInstallment = async (no) => {
     if (!confirm(`ยืนยันการชำระงวดที่ ${no}?`)) return;
     setLoading(true);
     try {
       await fetch(API_URL, {
         method: "POST",
+        headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({ type: "pay_car", no }),
       });
-      await fetchCar();
+      await fetchCar(); // โหลดใหม่หลังชำระ
     } catch (e) {
       console.error(e);
       setLoading(false);
     }
   };
 
+  // ============================================================
+  //  RENDER
+  // ============================================================
+
   return (
     <div className="car-root">
+
+      {/* ── Header ── */}
       <div className="car-header">
         <h2 className="car-title">Car payments</h2>
         <button className="car-refresh" onClick={fetchCar}>
@@ -63,12 +101,16 @@ export default function CarDashboard() {
         </button>
       </div>
 
+      {/* ── Summary Cards (3 col) ── */}
       <div className="car-summary">
+
+        {/* ยอดคงเหลือ */}
         <div className="car-summary-card">
           <div className="car-summary-label">ยอดคงเหลือ</div>
           <div className="car-summary-value">฿{stats.remaining.toLocaleString()}</div>
         </div>
 
+        {/* ความคืบหน้า */}
         <div className="car-summary-card">
           <div className="car-summary-label">ความคืบหน้า</div>
           <div className="car-summary-value">
@@ -79,14 +121,20 @@ export default function CarDashboard() {
           </div>
         </div>
 
+        {/* งวดถัดไป */}
         <div className="car-summary-card">
           <div className="car-summary-label">งวดถัดไป</div>
           {stats.next ? (
             <>
               <div className="car-next-no">งวดที่ {stats.next[0]}</div>
               <div className="car-next-date">วันที่ {stats.next[1] || "-"}</div>
-              <div className="car-next-amount">฿{Number(stats.next[2] || 0).toLocaleString()}</div>
-              <button className="car-pay-btn" onClick={() => payInstallment(stats.next[0])}>
+              <div className="car-next-amount">
+                ฿{Number(stats.next[2] || 0).toLocaleString()}
+              </div>
+              <button
+                className="car-pay-btn"
+                onClick={() => payInstallment(stats.next[0])}
+              >
                 ยืนยันชำระงวดนี้
               </button>
             </>
@@ -94,8 +142,10 @@ export default function CarDashboard() {
             <div className="car-done">ชำระครบแล้ว 🎉</div>
           )}
         </div>
+
       </div>
 
+      {/* ── ประวัติการชำระ ── */}
       <div className="car-history">
         <div className="car-history-header">ประวัติการชำระ</div>
         <div className="car-history-list">
@@ -116,15 +166,19 @@ export default function CarDashboard() {
               </div>
             </div>
           ))}
-          {rows.length === 0 && <div className="car-empty">ยังไม่มีข้อมูล</div>}
+          {rows.length === 0 && (
+            <div className="car-empty">ยังไม่มีข้อมูล</div>
+          )}
         </div>
       </div>
 
+      {/* Loading Overlay */}
       {loading && (
         <div className="car-loading">
           <div className="car-spinner" />
         </div>
       )}
+
     </div>
   );
 }

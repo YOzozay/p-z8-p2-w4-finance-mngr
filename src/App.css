@@ -1,15 +1,33 @@
 /* ============================================================
-   APP.CSS — Shell Layout + Sidebar + Navigation
+   APP.CSS — Shell Layout, Sidebar, Navigation
+
+   สารบัญ:
+   1.  App Shell
+   2.  Sidebar
+   3.  Nav Buttons
+   4.  Main Content
+   5.  Mobile Topbar
+   6.  Mobile Drawer & Overlay
+   7.  Responsive
+   8.  Shared Badge
+   9.  Shared Loading Overlay
+   10. Helper Classes
    ============================================================ */
 
-/* ── App Shell ── */
+
+/* ============================================================
+   1. APP SHELL — wrapper หลักของทั้งแอป
+   ============================================================ */
 .app-shell {
   display: flex;
   min-height: 100vh;
   background: var(--bg-base);
 }
 
-/* ── Sidebar ── */
+
+/* ============================================================
+   2. SIDEBAR — แถบเมนูซ้าย (desktop)
+   ============================================================ */
 .sidebar {
   width: var(--sidebar-width);
   background: var(--bg-surface);
@@ -21,26 +39,32 @@
   position: sticky;
   top: 0;
   height: 100vh;
-  box-shadow: var(--shadow-sm);
   flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
   transition: transform var(--ease);
   z-index: 100;
 }
 
 .sidebar-logo {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--success);
-  margin-bottom: var(--space-4);
-  letter-spacing: -0.03em;
-  padding-left: var(--space-1);
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--success);
+  letter-spacing: -0.03em;
+  padding-left: var(--space-1);
+  margin-bottom: var(--space-4);
 }
 
-/* ── Nav Buttons ── */
+
+/* ============================================================
+   3. NAV BUTTONS — ปุ่มเมนูแต่ละหน้า
+   ============================================================ */
 .nav-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   width: 100%;
   text-align: left;
   padding: 10px var(--space-3);
@@ -51,11 +75,8 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--ease);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
   transform: none; /* override global button hover */
+  transition: all var(--ease);
 }
 .nav-btn:hover {
   background: var(--bg-muted);
@@ -66,8 +87,10 @@
 .nav-btn.active {
   background: var(--accent-soft);
   color: var(--accent);
-  border-color: rgba(61,111,248,0.2);
+  border-color: rgba(61, 111, 248, 0.2);
 }
+
+/* Dark mode: ให้ active tab ดูชัดขึ้น */
 @media (prefers-color-scheme: dark) {
   .nav-btn.active {
     background: var(--accent-soft);
@@ -75,16 +98,22 @@
   }
 }
 
-/* ── Main Content ── */
+
+/* ============================================================
+   4. MAIN CONTENT — พื้นที่แสดงผลหลัก
+   ============================================================ */
 .main-content {
   flex: 1;
-  min-width: 0;
+  min-width: 0; /* ป้องกัน overflow ใน flex */
   overflow: auto;
 }
 
-/* ── Mobile: hamburger & drawer ── */
+
+/* ============================================================
+   5. MOBILE TOPBAR — แถบบนมือถือ (hamburger + logo)
+   ============================================================ */
 .mobile-topbar {
-  display: none;
+  display: none; /* ซ่อนบน desktop */
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
@@ -96,39 +125,45 @@
 }
 
 .mobile-logo {
+  flex: 1;
   font-size: 1.1rem;
   font-weight: 800;
   color: var(--success);
-  flex: 1;
 }
 
 .hamburger {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-muted);
-  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  font-size: 1.1rem;
-  padding: 0;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
+  padding: 0;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 1.1rem;
+  cursor: pointer;
 }
 .hamburger:hover { background: var(--bg-subtle); transform: none; opacity: 1; }
 
-/* ── Mobile overlay/drawer ── */
+
+/* ============================================================
+   6. MOBILE DRAWER & OVERLAY
+   ============================================================ */
+
+/* Overlay คลุมหน้าจอ เมื่อ drawer เปิด */
 .drawer-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 150;
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(3px);
+  z-index: 150;
 }
 .drawer-overlay.open { display: block; }
 
+/* Sidebar ที่ slide เข้าจากซ้ายบนมือถือ */
 .sidebar.drawer {
   position: fixed;
   top: 0;
@@ -136,18 +171,24 @@
   height: 100vh;
   z-index: 160;
   transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow-lg);
 }
 .sidebar.drawer.open { transform: translateX(0); }
 
-/* ── Responsive ── */
+
+/* ============================================================
+   7. RESPONSIVE
+   ============================================================ */
 @media (max-width: 768px) {
-  .sidebar:not(.drawer) { display: none; }
-  .mobile-topbar { display: flex; }
+  .sidebar:not(.drawer) { display: none; }  /* ซ่อน sidebar desktop */
+  .mobile-topbar        { display: flex; }  /* แสดง topbar มือถือ */
 }
 
-/* ── Shared Badge ── */
+
+/* ============================================================
+   8. SHARED BADGE — ใช้ร่วมกันทุก module
+   ============================================================ */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -161,35 +202,50 @@
 .badge.wait   { background: var(--warning-soft); color: var(--warning); }
 .badge.danger { background: var(--danger-soft);  color: var(--danger);  }
 
-/* ── Shared Loading ── */
+
+/* ============================================================
+   9. SHARED LOADING OVERLAY + SPINNER
+   ============================================================ */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
   backdrop-filter: blur(4px);
+  z-index: 9999;
 }
 .spinner {
   width: 44px;
   height: 44px;
-  border: 4px solid rgba(255,255,255,0.3);
+  border: 4px solid rgba(255, 255, 255, 0.3);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Helper ── */
+
+/* ============================================================
+   10. HELPER CLASSES — ใช้ร่วมกันทั่วทั้งแอป
+   ============================================================ */
+
+/* ข้อความ "ไม่มีข้อมูล" */
 .empty {
   text-align: center;
   color: var(--text-muted);
   padding: var(--space-8);
   font-size: 0.9rem;
 }
-.muted { color: var(--text-muted); font-size: 0.8rem; }
+
+/* ข้อความสีเทาขนาดเล็ก */
+.muted {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* หัวหน้าเพจ */
 .page-title {
   font-size: clamp(1.2rem, 3vw, 1.5rem);
   font-weight: 800;
